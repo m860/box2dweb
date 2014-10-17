@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World</title>
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+    <script type="text/javascript" src="../libs/utility.js"></script>
+    <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
+</head>
+<body>
+<canvas width="400" height="300" id="canvas">
+    I'm sorry , your browser don't support the canvas.
+</canvas>
+<script type="text/javascript">
+    var canvas=document.getElementById("canvas");
+    var ctx=canvas.getContext("2d");
+    var scale=30;
+
+    var gravity=new Box2D.Common.Math.b2Vec2(0,10);
+    var allowSleep=true;
+    var world=new Box2D.Dynamics.b2World(gravity,allowSleep);
+
+    //rect
+    var rectBodyDef=new Box2D.Dynamics.b2BodyDef();
+    rectBodyDef.type=Box2D.Dynamics.b2Body.b2_dynamicBody;
+    rectBodyDef.position.Set(200/scale,0);
+    var rectFixDef=new Box2D.Dynamics.b2FixtureDef();
+    rectFixDef.density=1.0;
+    rectFixDef.friction=0.5;
+    rectFixDef.restitution=0.2;
+    rectFixDef.shape=new Box2D.Collision.Shapes.b2PolygonShape();
+    rectFixDef.shape.SetAsBox(25/scale,25/scale);
+    world.CreateBody(rectBodyDef).CreateFixture(rectFixDef);
+
+    //floor
+    var floorBodyDef=new Box2D.Dynamics.b2BodyDef();
+    floorBodyDef.type=Box2D.Dynamics.b2Body.b2_staticBody;
+    floorBodyDef.position.Set(200/scale,275/scale);
+    var floorFixDef=new Box2D.Dynamics.b2FixtureDef();
+    floorFixDef.shape=new Box2D.Collision.Shapes.b2PolygonShape();
+    floorFixDef.shape.SetAsBox(200/scale,5/scale);
+    floorFixDef.density=1.0;
+    floorFixDef.friction=0.5;
+    floorFixDef.restitution=0.2;
+    world.CreateBody(floorBodyDef).CreateFixture(floorFixDef);
+
+    var debugDraw=new Box2D.Dynamics.b2DebugDraw();
+    debugDraw.SetSprite(ctx);
+    debugDraw.SetAlpha(0.5);
+    debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit|Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit);
+    debugDraw.SetDrawScale(scale);
+    world.SetDebugDraw(debugDraw);
+
+    function loop(){
+        world.Step(1/60,10,8);
+        world.DrawDebugData();
+        requestAnimationFrame(loop);
+    }
+
+    loop();
+
+</script>
+</body>
+</html>

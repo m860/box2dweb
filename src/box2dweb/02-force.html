@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World</title>
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+    <script type="text/javascript" src="../libs/utility.js"></script>
+    <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
+</head>
+<body>
+<canvas width="400" height="300" id="canvas">
+    I'm sorry , your browser don't support the canvas.
+</canvas>
+<div id="message">
+    <div id="pressDuration"></div>
+    <div id="force"></div>
+</div>
+<script type="text/javascript">
+    var message = document.getElementById("message");
+    var pressDuration = document.getElementById("pressDuration");
+    var force = document.getElementById("02-force");
+
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+    var scale = 30;
+
+    var gravity = new Box2D.Common.Math.b2Vec2(0, 10);
+    var allowSleep = true;
+    var world = new Box2D.Dynamics.b2World(gravity, allowSleep);
+
+    //rect
+    var rectBodyDef = new Box2D.Dynamics.b2BodyDef();
+    rectBodyDef.type = Box2D.Dynamics.b2Body.b2_dynamicBody;
+    rectBodyDef.position.Set(200 / scale, 0);
+    var rectFixDef = new Box2D.Dynamics.b2FixtureDef();
+    rectFixDef.density = 1.0;
+    rectFixDef.friction = 0.5;
+    rectFixDef.restitution = 0.2;
+    rectFixDef.shape = new Box2D.Collision.Shapes.b2PolygonShape();
+    rectFixDef.shape.SetAsBox(25 / scale, 25 / scale);
+    var rectBody = world.CreateBody(rectBodyDef);
+    rectBody.CreateFixture(rectFixDef);
+
+    //floor
+    var floorBodyDef = new Box2D.Dynamics.b2BodyDef();
+    floorBodyDef.type = Box2D.Dynamics.b2Body.b2_staticBody;
+    floorBodyDef.position.Set(200 / scale, 275 / scale);
+    var floorFixDef = new Box2D.Dynamics.b2FixtureDef();
+    floorFixDef.shape = new Box2D.Collision.Shapes.b2PolygonShape();
+    floorFixDef.shape.SetAsBox(200 / scale, 5 / scale);
+    floorFixDef.density = 1.0;
+    floorFixDef.friction = 0.5;
+    floorFixDef.restitution = 0.2;
+    world.CreateBody(floorBodyDef).CreateFixture(floorFixDef);
+
+    var debugDraw = new Box2D.Dynamics.b2DebugDraw();
+    debugDraw.SetSprite(ctx);
+    debugDraw.SetAlpha(0.5);
+    debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit );//| Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit
+    debugDraw.SetDrawScale(scale);
+    world.SetDebugDraw(debugDraw);
+
+    //keyup
+    var keydownTime = 0;
+    var keyupTime = 0;
+    var pressTime = 0;
+    var isKeydown = false;
+    function onKeyup(evt) {
+        if (evt.keyCode === 32) {
+            keyupTime = Date.now();
+            pressTime = keyupTime - keydownTime;
+            pressDuration.innerHTML = "press duration : " + pressTime;
+            keydownTime = 0;
+            keyupTime = 0;
+        }
+        isKeydown = false;
+    }
+    function onKeydown(evt) {
+        if (keydownTime <= 0 && evt.keyCode === 32) {
+            keydownTime = Date.now();
+            keyupTime = Date.now();
+        }
+        isKeydown = true;
+    }
+    window.addEventListener("keydown", onKeydown, false);
+    window.addEventListener("keyup", onKeyup, false);
+
+    var applyForce = new Box2D.Common.Math.b2Vec2(0, 0);
+    var rectPos;
+    function loop() {
+        rectPos = rectBody.GetPosition();
+        if (pressTime > 0) {
+            applyForce = new Box2D.Common.Math.b2Vec2(0, -10 * pressTime);
+            force.innerHTML = "apply force : " + applyForce.y;
+            rectBody.ApplyForce(applyForce, rectPos);
+            pressTime = 0;
+        }
+
+        world.Step(1 / 60, 10, 8);
+        world.DrawDebugData();
+
+        //draw force
+        ctx.strokeStyle="green";
+        if (applyForce.y < 0) {
+            ctx.beginPath();
+            ctx.moveTo(rectPos.x * scale, rectPos.y * scale);
+            ctx.lineTo(rectPos.x * scale, rectPos.y * scale - 50);
+            ctx.lineTo(rectPos.x * scale-5,rectPos.y * scale - 50+10);
+            ctx.moveTo(rectPos.x * scale, rectPos.y * scale - 50);
+            ctx.lineTo(rectPos.x * scale+5,rectPos.y * scale - 50+10);
+            ctx.stroke();
+            ctx.closePath();
+            ctx.fillText("("+applyForce.x+","+applyForce.y+")",rectPos.x * scale, rectPos.y * scale - 50);
+        }
+//        ctx.fillStyle="black";
+//        ctx.fillRect(rectPos.x*scale,rectPos.y*scale,20,20);
+
+        world.ClearForces();
+        requestAnimationFrame(loop);
+    }
+
+    loop();
+
+</script>
+</body>
+</html>

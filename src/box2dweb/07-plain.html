@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World</title>
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+    <!--<script type="text/javascript" src="jquery-1.9.1.min.js"></script>-->
+    <script type="text/javascript" src="../libs/utility.js"></script>
+    <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
+</head>
+<body>
+<canvas width="300" height="400" id="canvas">
+    I'm sorry , your browser don't support the canvas.
+</canvas>
+<div class="gui-layout">
+    <button onclick="start()">start</button>
+    <button onclick="stop()">stop</button>
+</div>
+<div id="message">
+</div>
+<script type="text/javascript">
+var messageManager = {
+    dom: document.getElementById("message"),
+    messages: [],
+    append: function (msg) {
+        this.messages.push(msg);
+    },
+    show: function () {
+        this.dom.innerHTML = this.messages.join("<br/>");
+        this.messages = [];
+    }
+};
+
+var scale = 30;
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+
+function DebugDrawQueue(ctx) {
+    this.draw = [];
+    this.ctx = ctx;
+}
+DebugDrawQueue.prototype = {
+    add: function (fn) {
+        this.draw.push(fn);
+    },
+    run: function () {
+        for (var i = 0; i < this.draw.length; i++) {
+            this.draw[i]();
+        }
+        this.draw = [];
+    }
+};
+
+var ddq = new DebugDrawQueue(ctx);
+
+function random(min, max) {
+    var len = new String(max).length;
+    var num = Math.random() * Math.pow(10, len);
+    var remainder = parseInt(num % max);
+    if (remainder < min) return min;
+    else return remainder;
+}
+function UserData() {
+    this.type = -1;
+    this.destroy = false;
+    this.filter = 0x0000;
+}
+UserData.filter = {
+    redPlain: 0x0001,
+    redBullet: 0x0010,
+    bluePlain: 0x0100,
+    blueBullet: 0x1000,
+    other: 0x1111,
+    shouldCollide: function (result) {
+        if (result === 0x0101
+                || result === 0x1001
+                || result === 0x0110)
+            return true
+        return false;
+    },
+    destroy: function (ua, ub) {
+        var result = ua.filter | ub.filter;
+        if (result === 0x0110
+                || result === 0x1001
+                || result === 0x0101) {
+            ua.destroy = ub.destroy = true;
+        }
+    }
+};
+function faceTo(bodyA, bodyB) {
+    var angleA = bodyA.GetAngle();
+    var angleB = bodyB.GetAngle();
+    messageManager.append(String.format("A:{0},B:{1}", angleA, angleB));
+    var pa = bodyA.GetWorldCenter().Copy();
+    pa.Multiply(scale);
+    var pb = bodyB.GetWorldCenter().Copy();
+    pb.Multiply(scale);
+    messageManager.append(String.format("A:{0},{1};B:{2},{3}", pa.x, pa.y, pb.x, pb.y));
+    var vec = new Box2D.Common.Math.b2Vec2(pb.x - pa.x, pb.y - pa.y);
+
+    var angle = Math.asin(vec.y / Math.sqrt(vec.x * vec.x + vec.y * vec.y));
+    if (vec.x < 0) angle = Math.PI - angle;
+    messageManager.append(String.format("vec : {1},{2} vec angle : {0}", angle, vec.x, vec.y));
+    bodyA.SetAngle(angle);
+
+    ddq.add(function () {
+        ctx.beginPath();
+        ctx.moveTo(pa.x, pa.y);
+        ctx.lineTo(pb.x, pb.y);
+        ctx.closePath();
+        ctx.stroke();
+    });
+}
+;
+function Thing(world) {
+    this.world = world;
+    this.bodyDef = new Box2D.Dynamics.b2BodyDef();
+    this.bodyDef.userData = new UserData();
+    this.fixtureDef = new Box2D.Dynamics.b2FixtureDef();
+    this.fixtureDef.density = 1.0;
+    this.fixtureDef.restitution = 0.2;
+    this.fixtureDef.friction = 0.5;
+    this.scale = scale;
+    this.body = null;
+    this.fixture = null;
+}
+Thing.prototype = {
+    create: function () {
+        this.body = this.world.CreateBody(this.bodyDef);
+        this.fixture = this.body.CreateFixture(this.fixtureDef);
+        delete this.bodyDef;
+        delete this.fixtureDef;
+        return this.body;
+    },
+    setPosition: function (x, y) {
+        if (this.body) this.body.SetPosition(x / this.scale, y / this.scale);
+        else this.bodyDef.position.Set(x / this.scale, y / this.scale);
+    },
+    getPosition: function () {
+        if (this.body) {
+            return this.body.GetPosition().Copy();
+        }
+        return new Box2D.Common.Math.b2Vec2(0, 0);
+    },
+    setPositionOfCanvas: function (x, y) {
+        if (this.body) {
+            this.body.SetPosition(x / this.scale, y / this.scale);
+        }
+    },
+    getPositionOfCanvas: function () {
+        if (this.body) {
+            var p = this.body.GetPosition().Copy();
+            p.x *= this.scale;
+            p.y *= this.scale;
+            return p;
+        }
+        return new Box2D.Common.Math.b2Vec2(0, 0);
+    },
+    setUserData: function (userData) {
+        this.bodyDef.userData = userData;
+    },
+    getUserData: function () {
+        if (this.body) return this.body.GetUserData();
+        return null;
+    },
+    setAsRect: function (hx, hy) {
+        this.fixtureDef.shape = new Box2D.Collision.Shapes.b2PolygonShape();
+        this.fixtureDef.shape.SetAsBox(hx / this.scale, hy / this.scale);
+    },
+    setAsCircle: function (r) {
+        this.fixtureDef.shape = new Box2D.Collision.Shapes.b2CircleShape(r / this.scale);
+    },
+    setType: function (type) {
+        this.bodyDef.type = type;
+    },
+    setFilter: function (filter) {
+        this.bodyDef.userData.filter = filter;
+    },
+    extendBodyDef: function (cfg) {
+        Object.extend(this.bodyDef, cfg);
+    },
+    extendFixtureDef: function (cfg) {
+        Object.extend(this.fixtureDef, cfg);
+    },
+    extendUserData: function (cfg) {
+        Object.extend(this.bodyDef.userData, cfg);
+    }
+};
+
+
+function Camera(ctx) {
+    this.ctx = ctx;
+    this.x = 0;
+    this.y = 0;
+    this.events = {};
+}
+Camera.prototype = {
+    moveTo: function (x, y) {
+        this.x += x;
+        this.y += y;
+        if (this.events["move"] && this.events["move"].length > 0) {
+            for (var i = 0; i < this.events["move"].length; i++) {
+                this.events["move"][i].bind(this)(x, y);
+            }
+        }
+        this.ctx.translate(x, y);
+    },
+    on: function (name, fn) {
+        if (!this.events[name]) this.events[name] = [];
+        this.events[name].push(fn);
+    },
+    getOffsetOrigin: function () {
+        return new Box2D.Common.Math.b2Vec2(this.x * -1, this.y * -1);
+    },
+    lookAt: function (thing) {
+        var o = this.getOffsetOrigin();
+        var pos = thing.getPositionOfCanvas();
+        var dur = pos.x - o.x - 150;
+        if (dur > 0) {
+            this.moveTo(dur * -1, 0);
+        }
+    }
+};
+
+var message = document.getElementById("message");
+
+
+var camera = new Camera(ctx);
+camera.on("move", function (x, y) {
+    if (player.body) {
+        var plainPos = player.getPosition();
+        var x = -x / scale + plainPos.x;
+        var y = -y / scale + plainPos.y;
+        var newPos = new Box2D.Common.Math.b2Vec2(x, y);
+        player.body.SetPosition(newPos);
+    }
+});
+var gravity = new Box2D.Common.Math.b2Vec2(0, 0);
+var allowSleep = true;
+var world = new Box2D.Dynamics.b2World(gravity, allowSleep);
+
+function Plane(world) {
+    Thing.call(this, world);
+    this.setPosition(150, 270);
+    this.fixtureDef.shape = new Box2D.Collision.Shapes.b2PolygonShape();
+    this.fixtureDef.shape.SetAsArray([new Box2D.Common.Math.b2Vec2(1, 0),
+        new Box2D.Common.Math.b2Vec2(0, -0.3),
+        new Box2D.Common.Math.b2Vec2(0, 0.3)], 3);
+    this.bodyDef.userData.type = "plane";
+    this.bodyDef.angle = -Math.PI / 2;
+    this.setType(Box2D.Dynamics.b2Body.b2_dynamicBody);
+    this.fireTime = Date.now();
+    this.bulletSpeed = new Box2D.Common.Math.b2Vec2(0, -10);
+}
+Plane.prototype = new Thing();
+Plane.prototype.fire = function (filter) {
+    var firePos = this.body.GetWorldPoint(new Box2D.Common.Math.b2Vec2(0, -1));
+    firePos.x *= scale;
+    firePos.y *= scale;
+    console.info(String.format("fire position:{0},{1}", firePos.x, firePos.y));
+    var bullet = new Bullet(this.world);
+    bullet.setFilter(filter);
+    bullet.setPosition(firePos.x, firePos.y);
+    bullet.setType(Box2D.Dynamics.b2Body.b2_dynamicBody);
+    bullet.setAsRect(0.5, 5);
+    bullet.create();
+    console.info("fire,create a bullet.");
+    bullet.body.ApplyForce(this.bulletSpeed, bullet.body.GetPosition());
+    this.fireTime = Date.now();
+};
+
+function Player(world) {
+    Plane.call(this, world);
+    this.setFilter(UserData.filter.redPlain);
+}
+Player.prototype = new Plane();
+Player.prototype.fire = function () {
+    Plane.prototype.fire.bind(this)(UserData.filter.redBullet);
+};
+
+function Enemy(world) {
+    Plane.call(this, world);
+    this.setFilter(UserData.filter.bluePlain);
+}
+Enemy.prototype = new Plane();
+Enemy.prototype.fire = function () {
+    Plane.prototype.fire.bind(this)(UserData.filter.blueBullet);
+};
+
+function Bullet(wolrd) {
+    Thing.call(this, world);
+    this.bodyDef.userData.type = "bullet";
+    this.bodyDef.bullet = true;
+}
+Bullet.prototype = new Thing();
+
+
+var player = new Player(world);
+player.extendBodyDef({
+    fixedRotation: true
+});
+player.create();
+
+var debugDraw = new Box2D.Dynamics.b2DebugDraw();
+debugDraw.SetSprite(ctx);
+debugDraw.SetAlpha(0.5);
+debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit | Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit);//| Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit
+debugDraw.SetDrawScale(scale);
+world.SetDebugDraw(debugDraw);
+
+
+function Input() {
+    this.keys = new Array(255);
+    window.addEventListener("keydown", this.onKeyDown.bind(this), false);
+    window.addEventListener("keyup", this.onKeyUp.bind(this), false);
+    this.clear();
+}
+Input.w = 87;
+Input.s = 83;
+Input.a = 65;
+Input.d = 68;
+Input.j = 74;
+Input.k = 75;
+Input.prototype = {
+    clear: function () {
+        for (var i = 0; i < 255; i++) {
+            this.keys[i] = false;
+        }
+    },
+    isKeyDown: function (keycode) {
+        return this.keys[keycode];
+    },
+    onKeyDown: function (evt) {
+        this.keys[evt.keyCode] = true;
+    },
+    onKeyUp: function (evt) {
+        this.keys[evt.keyCode] = false;
+    }
+};
+var input = new Input();
+
+var applyForce = new Box2D.Common.Math.b2Vec2(0, 0);
+var circlePos;
+var cameraSpeed = 10 / 1000;
+var loopStartTime = Date.now();
+var createBarrierTime = Date.now();
+var timer;
+var forceValue = 1;
+var plainSpeed = 10 / 1000;
+var plainSpeedDirection;
+var plainCurrentPosition;
+var frameCount = 0;
+var startDate = Date.now();
+
+var contactListener = new Box2D.Dynamics.b2ContactListener();
+contactListener.BeginContact = function (contact) {
+    var fixA = contact.GetFixtureA();
+    var fixB = contact.GetFixtureB();
+    var bodyA = fixA.GetBody();
+    var bodyB = fixB.GetBody();
+
+    var userDataA = bodyA.GetUserData();
+    var userDataB = bodyB.GetUserData();
+    UserData.filter.destroy(userDataA, userDataB);
+};
+world.SetContactListener(contactListener);
+
+var contactFilter = new Box2D.Dynamics.b2ContactFilter();
+contactFilter.ShouldCollide = function (fixA, fixB) {
+    var ua = fixA.GetBody().GetUserData();
+    var ub = fixB.GetBody().GetUserData();
+    var result = ua.filter | ub.filter;
+    console.info("filter result : " + result.toString(16));
+    return UserData.filter.shouldCollide(result);
+};
+world.SetContactFilter(contactFilter);
+
+
+var destroyRegion = [
+    {x: -100, y: -200},
+    {x: canvas.width + 100, y: canvas.height + 100}
+];
+function Region(camera, minx, maxx, miny, maxy) {
+    this.camera = camera;
+    this.minx = minx;
+    this.maxx = maxx;
+    this.miny = miny;
+    this.maxy = maxy;
+    this.camera.on("move", function (x, y) {
+        this.minx -= x;
+        this.maxx -= x;
+        this.miny -= y;
+        this.maxy -= y;
+        messageManager.append(String.format("region : minx={0},max={1},miny={2},maxy={3}", this.minx, this.maxx, this.miny, this.maxy));
+    }.bind(this));
+}
+Region.prototype = {
+    isOutside: function (body) {
+        var pos = body.GetPosition().Copy();
+        pos.x = pos.x * scale;
+        pos.y = pos.y * scale;
+        if (pos.x > this.maxx || pos.x < this.minx) return true;
+        if (pos.y > this.maxy || pos.y < this.miny) return true;
+        return false;
+    }
+};
+
+var region = new Region(camera, -100, canvas.width + 100, -500, canvas.height + 100);
+
+function createEnemy() {
+    var origion = camera.getOffsetOrigin();
+    var pos = new Box2D.Common.Math.b2Vec2(-origion.x + 150, origion.y + 50);
+    var enemy = new Enemy(world);
+    enemy.setPosition(pos.x, pos.y);
+    enemy.setType(Box2D.Dynamics.b2Body.b2_dynamicBody);
+//    enemy.extendBodyDef({
+//        angle: Math.PI
+//    });
+    enemy.create();
+    return enemy;
+//    enemy.body.ApplyForce(new Box2D.Common.Math.b2Vec2(0, random(30, 70)), enemy.body.GetPosition());
+}
+var enemy = createEnemy();
+
+function loop() {
+    frameCount += 1;
+    ctx.clearRect(camera.x * -1, camera.y * -1, canvas.width, canvas.height);
+//    if(frameCount%60===0){
+//        createEnemy();
+//    }
+    messageManager.append(String.format("body total : {0}", world.GetBodyCount()));
+
+    var loopDuration = Date.now() - loopStartTime;
+    loopStartTime = Date.now();
+
+
+    //camera move along x-axis
+    var cameraMove = loopDuration * cameraSpeed;
+//    camera.moveTo(0, cameraMove);
+    messageManager.append(String.format("camera position : {0},{1}", camera.x, camera.y));
+
+    faceTo(enemy.body, player.body);
+    if (player.body) {
+        if (player.body.GetUserData().destroy) {
+            world.DestroyBody(player.body);
+        }
+        var plainPos = player.getPositionOfCanvas();
+        messageManager.append(String.format("plane position : x={0},y={1}", plainPos.x, plainPos.y));
+
+        plainCurrentPosition = player.getPosition();
+        if (input.isKeyDown(Input.a)) {
+            plainSpeedDirection = new Box2D.Common.Math.b2Vec2(-1, 0);
+            plainSpeedDirection.Multiply(plainSpeed * loopDuration);
+            plainCurrentPosition.Add(plainSpeedDirection);
+            player.body.SetPosition(plainCurrentPosition);
+        }
+        if (input.isKeyDown(Input.w)) {
+            plainSpeedDirection = new Box2D.Common.Math.b2Vec2(0, -1);
+            plainSpeedDirection.Multiply(plainSpeed * loopDuration);
+            plainCurrentPosition.Add(plainSpeedDirection);
+            player.body.SetPosition(plainCurrentPosition);
+        }
+        if (input.isKeyDown(Input.d)) {
+            plainSpeedDirection = new Box2D.Common.Math.b2Vec2(1, 0);
+            plainSpeedDirection.Multiply(plainSpeed * loopDuration);
+            plainCurrentPosition.Add(plainSpeedDirection);
+            player.body.SetPosition(plainCurrentPosition);
+        }
+        if (input.isKeyDown(Input.s)) {
+            plainSpeedDirection = new Box2D.Common.Math.b2Vec2(0, 1);
+            plainSpeedDirection.Multiply(plainSpeed * loopDuration);
+            plainCurrentPosition.Add(plainSpeedDirection);
+            player.body.SetPosition(plainCurrentPosition);
+        }
+        if (input.isKeyDown(Input.j)) {
+            var fireDur = Date.now() - player.fireTime;
+            if (fireDur > 100) {
+                player.fire();
+            }
+        }
+    }
+
+    //destroy the body that outside the region
+    var bodyList = world.GetBodyList();
+    while (bodyList) {
+        var ud = bodyList.GetUserData();
+        if (ud && ud.destroy === true) {
+            world.DestroyBody(bodyList);
+        }
+        if (region.isOutside(bodyList)) {
+            console.info("body is outside");
+            world.DestroyBody(bodyList);
+        }
+
+        bodyList = bodyList.GetNext();
+    }
+
+
+    world.Step(1 / 30, 10, 8);
+    world.DrawDebugData();
+    world.ClearForces();
+    ddq.run();
+    timer = requestAnimationFrame(loop);
+    messageManager.append(String.format("duration game time : {0}", (Date.now() - startDate) / 1000));
+    messageManager.append(String.format("frame count : {0}", frameCount));
+    messageManager.append(String.format("fps : {0}", Math.ceil(frameCount / ((Date.now() - startDate) / 1000))));
+
+    messageManager.show();
+}
+function start() {
+    console.info("start the game");
+    loopStartTime = Date.now();
+    startDate = Date.now();
+    frameCount = 0;
+    loop();
+}
+function stop() {
+    if (timer) {
+        console.info("stop the game");
+        window.cancelRequestAnimationFrame(timer);
+        tiimer = null;
+    }
+}
+
+</script>
+</body>
+</html>
