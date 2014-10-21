@@ -3,7 +3,7 @@
 <head>
     <title>Hello World</title>
     <link rel="stylesheet" href="style.css" type="text/css"/>
-    <script type="text/javascript" src="../libs/utility.js"></script>
+    <script type="text/javascript" src="global.js"></script>
     <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
 </head>
 <body>
@@ -29,6 +29,17 @@
     rectFixDef.restitution=0.2;
     rectFixDef.shape=new Box2D.Collision.Shapes.b2PolygonShape();
     rectFixDef.shape.SetAsBox(25/scale,25/scale);
+    world.CreateBody(rectBodyDef).CreateFixture(rectFixDef);
+
+    rectFixDef.shape.SetAsArray([new Box2D.Common.Math.b2Vec2(1,0),
+        new Box2D.Common.Math.b2Vec2(0,1),
+        new Box2D.Common.Math.b2Vec2(0,-1)],3)
+//    rectFixDef.shape.vertexCount=3;
+//    rectFixDef.shape.vertices=new Array(3);
+//    rectFixDef.shape.vertices[0].Set(1,0);
+//    rectFixDef.shape.vertices[1].Set(0,1);
+//    rectFixDef.shape.vertices[2].Set(0,-1);
+    rectBodyDef.position.Set(100/scale,0);
     world.CreateBody(rectBodyDef).CreateFixture(rectFixDef);
 
     //floor

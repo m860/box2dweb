@@ -1,1 +1,1 @@
-(function(){var b=$("<div style='position: absolute;top:0px;right:0px;min-width:100px;height: 100%;overflow: scroll; text-overflow: scroll; font-size:12px;'></div>");function c(d){b.append("<div style='padding: 0px; margin: 0px;'>"+d+"</div>")}var a={info:c};window.console=a;$(function(){b.appendTo(document.body)})})();
+if(!Object.extend){Object.extend=function(a,c){for(var b in c){a[b]=c[b]}}};

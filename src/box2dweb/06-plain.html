@@ -4,7 +4,7 @@
     <title>Hello World</title>
     <link rel="stylesheet" href="style.css" type="text/css"/>
     <!--<script type="text/javascript" src="jquery-1.9.1.min.js"></script>-->
-    <script type="text/javascript" src="../libs/utility.js"></script>
+    <script type="text/javascript" src="global.js"></script>
     <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
 </head>
 <body>
@@ -48,9 +48,9 @@ function UserData() {
     this.filter = 0x0000;
 }
 UserData.filter = {
-    redPlain: 0x0001,
+    redPlane: 0x0001,
     redBullet: 0x0010,
-    bluePlain: 0x0100,
+    bluePlane: 0x0100,
     blueBullet: 0x1000,
     other: 0x1111,
     shouldCollide: function (result) {
@@ -218,7 +218,7 @@ Plain.prototype.fire = function (filter) {
 
 function Player(world){
     Plain.call(this,world);
-    this.setFilter(UserData.filter.redPlain);
+    this.setFilter(UserData.filter.redPlane);
 }
 Player.prototype=new Plain();
 Player.prototype.fire=function(){
@@ -227,7 +227,7 @@ Player.prototype.fire=function(){
 
 function Enemy(world){
     Plain.call(this,world);
-    this.setFilter(UserData.filter.bluePlain);
+    this.setFilter(UserData.filter.bluePlane);
 }
 Enemy.prototype=new Plain();
 Enemy.prototype.fire=function(){
