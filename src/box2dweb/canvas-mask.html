@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<canvas id="canvas" width="400" height="300" style="background: gray;"></canvas>
+<script type="application/javascript">
+    var canvas=document.querySelector("#canvas");
+
+    var ctx=canvas.getContext("2d");
+
+    var imageSrc="http://g.hiphotos.baidu.com/image/pic/item/37d12f2eb9389b50e114062d8635e5dde6116ee2.jpg";
+
+    var image=document.createElement("img");
+
+    var maskPos={
+        x:160,
+        y:50
+    };
+    var maskRadius=50;
+
+    image.onload=function(){
+
+        ctx.save();
+
+        ctx.globalAlpha=0.5;
+
+//        ctx.arc(200,150,50,0,Math.PI*2);
+
+//        ctx.clip();
+
+        ctx.drawImage(image,0,0);
+
+        ctx.restore();
+
+        ctx.save();
+        ctx.arc(maskPos.x,maskPos.y,maskRadius,0,Math.PI*2);
+        ctx.clip();
+        ctx.drawImage(image,0,0);
+        ctx.restore();
+
+    };
+
+    image.src=imageSrc;
+</script>
+</body>
+</html>

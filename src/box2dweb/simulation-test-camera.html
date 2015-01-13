@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
+    <script type="text/javascript" src="Simulation.js"></script>
+    <script type="text/javascript" src="Simulation-debugger.js"></script>
+</head>
+<body>
+<canvas id="canvas" width="400" height="300"></canvas>
+<script type="application/javascript">
+    var canvas=document.querySelector("#canvas");
+
+    //new simulation
+    var simulation=new Simulation({
+        ctx:canvas.getContext("2d"),
+        gravity:new b2Vec2(0,0)
+    });
+
+    //cfg.width
+    //cfg.height
+    //cfg.center.x
+    //cfg.center.y
+    function Region(sim, cfg) {
+        this.simulation = sim;
+        this.setting = cfg;
+
+        var hw=cfg.width/2;
+        var hh=cfg.height/2;
+
+        var shape;
+
+        var left=new Thing({
+            type:b2Body.b2_staticBody,
+            position:new b2Vec2(cfg.center.x-hw-5,cfg.center.y)
+        });
+        shape=new b2PolygonShape();
+        shape.SetAsBox(5,hh);
+        left.addFixtureDef({shape:shape});
+        left.bodyDef.userData.render=this.render;
+        sim.createThing(left);
+
+        var right=new Thing({
+            type:b2Body.b2_staticBody,
+            position:new b2Vec2(cfg.center.x+hw+5,cfg.center.y)
+        });
+        shape=new b2PolygonShape();
+        shape.SetAsBox(5,hh);
+        right.addFixtureDef({shape:shape});
+        right.bodyDef.userData.render=this.render;
+        sim.createThing(right);
+
+        var top=new Thing({
+            type:b2Body.b2_staticBody,
+            position:new b2Vec2(cfg.center.x,cfg.center.y-hh-5)
+        });
+        shape=new b2PolygonShape();
+        shape.SetAsBox(hw,5);
+        top.addFixtureDef({shape:shape});
+        top.bodyDef.userData.render=this.render;
+        sim.createThing(top);
+
+        var bottom=new Thing({
+            type:b2Body.b2_staticBody,
+            position:new b2Vec2(cfg.center.x,cfg.center.y+hh+5)
+        });
+        shape=new b2PolygonShape();
+        shape.SetAsBox(hw,5);
+        bottom.addFixtureDef({shape:shape});
+        bottom.bodyDef.userData.render=this.render;
+        sim.createThing(bottom);
+    }
+    Region.prototype = {
+        render:function(ctx,body){
+            var xf=body.GetTransform();
+            var fixture = body.GetFixtureList();
+            while (fixture) {
+                var shape = fixture.GetShape();
+                if (!shape) return;
+                var vertexCount = parseInt(shape.GetVertexCount());
+                var localVertices = shape.GetVertices();
+                var p;
+                var isMove=false;
+                ctx.beginPath();
+                Array.each(localVertices,function(){
+                    p=b2Math.MulX(xf, this);
+//                    p=body.GetWorldPoint(this);
+                    if(!isMove){
+                        isMove=true;
+                        ctx.moveTo(p.x*Simulation.SCALE, p.y*Simulation.SCALE);
+                    }
+                    else{
+                        ctx.lineTo(p.x*Simulation.SCALE, p.y*Simulation.SCALE);
+                    }
+                });
+                ctx.closePath();
+                ctx.stroke();
+
+                fixture = fixture.GetNext();
+            }
+        }
+    };
+
+    var region=new Region(simulation,{
+        width:400,
+        height:300,
+        center:{x:200,y:150}
+    });
+
+    //camera
+    var camera=new Camera();
+    simulation.setCamera(camera);
+
+    //circle
+    var circle=new Thing({
+        type:b2Body.b2_dynamicBody,
+        position:new b2Vec2(50,0),
+        linearVelocity:new b2Vec2(10,5)
+    });
+    circle.addFixtureDef({
+        shape:new b2CircleShape(10),
+        restitution:1,
+        friction:0
+    });
+    circle.setRender(renderCircle);
+    simulation.createThing(circle);
+//    camera.lookAt(circle.body);
+
+    //on running
+    simulation.on("running",function(){
+//        camera.lookAt(circle.body);
+        camera.follow(circle.body,100,300,50,250);
+//        console.log(String.format("canvas translate x={0}",camera.x));
+    }).on("rendering",function(ctx){
+        ctx.save();
+        ctx.beginPath();
+        if(camera.maxX>=0) {
+            ctx.moveTo(camera.x+camera.maxX,camera.y);
+            ctx.lineTo(camera.x+camera.maxX,camera.y+300);
+        }
+        if(camera.minX>=0) {
+            ctx.moveTo(camera.x+camera.minX,camera.y);
+            ctx.lineTo(camera.x+camera.minX,camera.y+300);
+        }
+        if(camera.maxY>=0){
+            ctx.moveTo(camera.x,camera.y+camera.maxY);
+            ctx.lineTo(camera.x+400,camera.y+camera.maxY);
+        }
+        if(camera.minY>=0){
+            ctx.moveTo(camera.x,camera.y+camera.minY);
+            ctx.lineTo(camera.x+400,camera.y+camera.minY);
+        }
+        ctx.closePath();
+        ctx.globalAlpha=0.2;
+        ctx.strokeStyle="blue";
+        ctx.setLineDash([1,5]);
+        ctx.stroke();
+        ctx.restore();
+    });
+
+    //run
+    simulation.run();
+
+</script>
+</body>
+</html>

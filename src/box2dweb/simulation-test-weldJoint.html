@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
+    <script type="text/javascript" src="Simulation.js"></script>
+    <script type="text/javascript" src="Simulation-debugger.js"></script>
+</head>
+<body>
+<canvas id="canvas" width="400" height="300"></canvas>
+<script type="application/javascript">
+    var canvas=document.querySelector("#canvas");
+
+    //new simulation
+    var simulation=new Simulation({ctx:canvas.getContext("2d")});
+
+
+    //create floor
+    var floor=new Thing({
+        type:b2Body.b2_staticBody,
+        position:new b2Vec2(200,275)
+    });
+    var shape=new b2PolygonShape();
+    shape.SetAsBox(200,5);
+    floor.addFixtureDef({
+        shape:shape
+    });
+    floor.setRender(renderRectangle);
+    simulation.createThing(floor);
+
+    var box1=new Thing({
+        type:b2Body.b2_dynamicBody,
+        position:new b2Vec2(100,0),
+        angle:Math.PI/5
+    });
+    shape=new b2PolygonShape();
+    shape.SetAsBox(20,20);
+    box1.addFixtureDef({
+        shape:shape
+    });
+    simulation.createThing(box1);
+
+    var box2=new Thing({
+        type:b2Body.b2_dynamicBody,
+        position:new b2Vec2(110,0)
+    });
+    shape=new b2PolygonShape();
+    shape.SetAsBox(20,20);
+    box2.addFixtureDef({
+        shape:shape
+    });
+    simulation.createThing(box2);
+
+    //weld joint
+    var weldJointDef=new Box2D.Dynamics.Joints.b2WeldJointDef();
+    weldJointDef.Initialize(box1.body,box2.body,box1.body.GetWorldCenter());
+    simulation.world.CreateJoint(weldJointDef);
+
+    //run
+    simulation.run();
+
+</script>
+</body>
+</html>

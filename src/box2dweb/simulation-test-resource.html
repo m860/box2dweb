@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
+    <script type="text/javascript" src="Simulation.js"></script>
+</head>
+<body>
+<script type="application/javascript">
+//    Resource.loadImage(["http://android-wallpapers.25pp.com/20140211/1405/52f9bdb4025b42_900x675.jpg",
+//                "http://t1.gstatic.com/images?q=tbn:ANd9GcQdVmaCpnIsrxWIvNIMyV26xHHZkH_tfm-9PVt7HqOi25k600go"],
+//            function (images) {
+//                console.log("complete");
+//                Array.each(images,function(){
+//                    document.body.appendChild(this);
+//                });
+//            });
+        Resource.load({
+            images:["http://photocdn.sohu.com/20140516/Img399641351.jpg"],
+            audioes:["http://www.w3school.com.cn/i/horse.ogg"]
+        },function(res){
+            console.info(res);
+            res.audioes[0].play();
+        });
+</script>
+</body>
+</html>

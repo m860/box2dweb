@@ -3,8 +3,8 @@
  */
 function Input() {
     this.keys = new Array(255);
-    window.addEventListener("keydown", this.onKeyDown.bind(this), false);
-    window.addEventListener("keyup", this.onKeyUp.bind(this), false);
+    window.addEventListener("keydown", this._onKeyDown.bind(this), false);
+    window.addEventListener("keyup", this._onKeyUp.bind(this), false);
     this.clear();
 }
 Input.prototype = {
@@ -16,10 +16,10 @@ Input.prototype = {
     isKeyDown: function (keycode) {
         return this.keys[keycode];
     },
-    onKeyDown: function (evt) {
+    _onKeyDown: function (evt) {
         this.keys[evt.keyCode] = true;
     },
-    onKeyUp: function (evt) {
+    _onKeyUp: function (evt) {
         this.keys[evt.keyCode] = false;
     }
 };
