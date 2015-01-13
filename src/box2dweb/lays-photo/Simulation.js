@@ -62,7 +62,7 @@ Array.each = function (arr, fn) {
 };
 
 //Number.random(min,max)
-Number.random=function(min,max){
+Number.random = function (min, max) {
     return Math.random() * (max - min) + min;
 };
 
@@ -74,16 +74,16 @@ var b2Vec2 = Box2D.Common.Math.b2Vec2,
     b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape,
     b2CircleShape = Box2D.Collision.Shapes.b2CircleShape,
     b2ContactFilter = Box2D.Dynamics.b2ContactFilter,
-    b2Math=Box2D.Common.Math.b2Math,
+    b2Math = Box2D.Common.Math.b2Math,
     b2World = Box2D.Dynamics.b2World;
 
 //event interface
-function IEvent(){
-    this._events={};
+function IEvent() {
+    this._events = {};
 }
-IEvent.prototype={
-    on:function(name,fn){
-        this._events[name]=fn;
+IEvent.prototype = {
+    on: function (name, fn) {
+        this._events[name] = fn;
         return this;
     }
 };
@@ -93,7 +93,7 @@ function Simulation(cfg) {
     var me = this;
     if (!cfg.ctx) throw "cfg.ctx is not defined";
     if (!cfg.gravity) cfg.gravity = new b2Vec2(0, 10);//default
-    if (typeof(cfg.allowSleep)==="undefined") cfg.allowSleep = true;//default
+    if (typeof(cfg.allowSleep) === "undefined") cfg.allowSleep = true;//default
     if (!cfg.step) cfg.step = 1 / 60;//default 60 fps
     if (!cfg.velocityIterations) cfg.velocityIterations = 10;//default
     if (!cfg.positionIterations) cfg.positionIterations = 8;//default
@@ -124,23 +124,23 @@ function Simulation(cfg) {
     this.world.SetContactFilter(contactFilter);
 
     //debug draw
-    //var debugDraw = new Box2D.Dynamics.b2DebugDraw();
-    //debugDraw.SetSprite(this.setting.ctx);
-    //debugDraw.SetAlpha(0.5);
-    //debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit| Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit);//| Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit
-    //debugDraw.SetDrawScale(Simulation.SCALE);
-    //this.world.SetDebugDraw(debugDraw);
+    var debugDraw = new Box2D.Dynamics.b2DebugDraw();
+    debugDraw.SetSprite(this.setting.ctx);
+    debugDraw.SetAlpha(0.5);
+    debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit | Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit);//| Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit
+    debugDraw.SetDrawScale(Simulation.SCALE);
+    this.world.SetDebugDraw(debugDraw);
 
-    this.camera=null;
+    this.camera = null;
 
     //start time
-    this.startTime=null;
+    this.startTime = null;
 }
 Simulation.prototype = {
     run: function () {
         //start time
-        if(!this.startTime){
-            this.startTime=Date.now();
+        if (!this.startTime) {
+            this.startTime = Date.now();
         }
 
         //on running
@@ -152,21 +152,21 @@ Simulation.prototype = {
         //this.world.DrawDebugData();
 
         //clear canvas
-        var cx,cy;
-        if(this.camera){
-            cx=this.camera.x;
-            cy=this.camera.y;
+        var cx, cy;
+        if (this.camera) {
+            cx = this.camera.x;
+            cy = this.camera.y;
         }
-        else{
-            cx=0,cy=0;
+        else {
+            cx = 0, cy = 0;
         }
         this.setting.ctx.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
 
         //debug
         //draw clear rect
         this.setting.ctx.save();
-        this.setting.ctx.globalAlpha=0.3;
-        this.setting.ctx.strokeStyle="red";
+        this.setting.ctx.globalAlpha = 0.3;
+        this.setting.ctx.strokeStyle = "red";
         this.setting.ctx.strokeRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
         this.setting.ctx.restore();
 
@@ -188,10 +188,12 @@ Simulation.prototype = {
         this.world.ClearForces();
 
         //loop
-        this._timer = window.requestAnimationFrame(this.run.bind(this));
+        //this._timer = window.requestAnimationFrame(this.run.bind(this));
+        this._timer = setTimeout(this.run.bind(this), 1000 * this.setting.step);
     },
     pause: function () {
-        window.cancelRequestAnimationFrame(this._timer);
+        //window.cancelRequestAnimationFrame(this._timer);
+        clearTimeout(this._timer);
         this._timer = null;
     },
     createThing: function (thing) {
@@ -209,119 +211,119 @@ Simulation.prototype = {
     //    this._events[name] = fn;
     //    return this;
     //},
-    setCamera:function(camera){
+    setCamera: function (camera) {
         //
-        camera.ctx=this.setting.ctx;
-        this.camera=camera;
+        camera.ctx = this.setting.ctx;
+        this.camera = camera;
     },
-    getBodyAtMouse:function(mouseX,mouseY){
-        mouseX/=Simulation.SCALE;
-        mouseY/=Simulation.SCALE;
-        var mouseVec=new b2Vec2(mouseX,mouseY);
+    getBodyAtMouse: function (mouseX, mouseY) {
+        mouseX /= Simulation.SCALE;
+        mouseY /= Simulation.SCALE;
+        var mouseVec = new b2Vec2(mouseX, mouseY);
 
-        var aabb=new Box2D.Collision.b2AABB();
-        aabb.lowerBound.Set(mouseX-0.001,mouseY-0.001);
-        aabb.upperBound.Set(mouseX+0.001,mouseY+0.001);
+        var aabb = new Box2D.Collision.b2AABB();
+        aabb.lowerBound.Set(mouseX - 0.001, mouseY - 0.001);
+        aabb.upperBound.Set(mouseX + 0.001, mouseY + 0.001);
 
         var body;
 
-        function query(fixture){
-            var shape=fixture.GetShape();
-            var result=shape.TestPoint(fixture.GetBody().GetTransform(),mouseVec);
-            if(result){
-                body=fixture.GetBody();
+        function query(fixture) {
+            var shape = fixture.GetShape();
+            var result = shape.TestPoint(fixture.GetBody().GetTransform(), mouseVec);
+            if (result) {
+                body = fixture.GetBody();
                 return false;
             }
             return true;
         }
 
-        this.world.QueryAABB(query,aabb);
+        this.world.QueryAABB(query, aabb);
 
         return body;
     },
-    getRunDuration:function(){
-        return Date.now()-this.startTime;
+    getRunDuration: function () {
+        return Date.now() - this.startTime;
     }
 };
 //apply IEvent.prototype
-Object.extend(Simulation.prototype,IEvent.prototype);
+Object.extend(Simulation.prototype, IEvent.prototype);
 
 //default is 30
 Simulation.SCALE = 30;
 //Camera
 //camera size is same to canvas's size
 function Camera() {
-    this.y=0;//center.y
-    this.x=0;//center.x
-    this.ctx=null;
-    this.maxX=-1;
-    this.minX=-1;
-    this.maxY=-1;
-    this.minY=-1;
+    this.y = 0;//center.y
+    this.x = 0;//center.x
+    this.ctx = null;
+    this.maxX = -1;
+    this.minX = -1;
+    this.maxY = -1;
+    this.minY = -1;
 }
-Object.extend(Camera.prototype,IEvent.prototype);
+Object.extend(Camera.prototype, IEvent.prototype);
 //Camera.prototype.moveTo=function(x,y){
-    //if(this._events["moving"]) this._events["moving"]();
-    //this.y=y;
-    //this.x=x;
-    ////translate by x,y
-    ////calculate left,top
-    //var left=this.x-this.ctx.canvas.width/2;
-    //var top=this.y-this.ctx.canvas.height/2;
-    //this.ctx.translate(left,top);
-    //if(this._events["moved"]) this._events["moved"]();
+//if(this._events["moving"]) this._events["moving"]();
+//this.y=y;
+//this.x=x;
+////translate by x,y
+////calculate left,top
+//var left=this.x-this.ctx.canvas.width/2;
+//var top=this.y-this.ctx.canvas.height/2;
+//this.ctx.translate(left,top);
+//if(this._events["moved"]) this._events["moved"]();
 //};
-Camera.prototype.lookAt=function(body,ignoreX,ignoreY){
-    var pos=body.GetPosition();
-    var x=pos.x*Simulation.SCALE;
+Camera.prototype.lookAt = function (body, ignoreX, ignoreY) {
+    var pos = body.GetPosition();
+    var x = pos.x * Simulation.SCALE;
     //var y=pos.y*Simulation.SCALE;
-    this.ctx.translate(this.x-x,0);
-    this.x=x;
+    this.ctx.translate(this.x - x, 0);
+    this.x = x;
 };
 
-Camera.prototype.follow=function(body,minx,maxx,miny,maxy){
-    this.maxX=maxx;
-    this.minX=minx;
-    this.maxY=maxy;
-    this.minY=miny;
+Camera.prototype.follow = function (body, minx, maxx, miny, maxy) {
+    this.maxX = maxx;
+    this.minX = minx;
+    this.maxY = maxy;
+    this.minY = miny;
 
     //TODO optimize calculate
-    var pos=body.GetPosition().Copy();
+    var pos = body.GetPosition().Copy();
     //pos.Multiply(Simulation.SCALE);
-    var x=pos.x*Simulation.SCALE;
+    var x = pos.x * Simulation.SCALE;
 
-    var realX,dx,realY,dy;
-    if(minx>=0){
-        realX=this.x+minx;
-        if(x<realX){
-            dx=realX-x;
-            this.ctx.translate(dx,0);
-            this.x-=dx;
+    var realX, dx, realY, dy;
+    if (minx >= 0) {
+        realX = this.x + minx;
+        if (x < realX) {
+            dx = realX - x;
+            this.ctx.translate(dx, 0);
+            this.x -= dx;
         }
     }
-    if(maxx>=0){
-        realX=this.x+maxx;
-        if(x>realX){
-            dx=x-realX;
-            this.ctx.translate(-dx,0);
-            this.x+=dx;
+    if (maxx >= 0) {
+        realX = this.x + maxx;
+        if (x > realX) {
+            dx = x - realX;
+            this.ctx.translate(-dx, 0);
+            this.x += dx;
         }
     }
-    var y=pos.y*Simulation.SCALE;
-    if(miny>=0){
-        realY=this.y+miny;
-        if(y<realY){
-            dy=realY-y;
-            this.ctx.translate(0,dy);
-            this.y-=dy;
+    var y = pos.y * Simulation.SCALE;
+    if (miny >= 0) {
+        realY = this.y + miny;
+        if (y < realY) {
+            dy = realY - y;
+            this.ctx.translate(0, dy);
+            this.y -= dy;
         }
     }
-    if(maxy>=0){
-        realY=this.y+maxy;
-        if(y>realY){
-            dy=y-realY;
-            this.ctx.translate(0,-dy);
-            this.y+=dy;
+    if (maxy >= 0) {
+        realY = this.y + maxy;
+        if (y > realY) {
+            dy = y - realY;
+            this.ctx.translate(0, -dy);
+            this.y += dy;
         }
     }
 };
@@ -347,7 +349,7 @@ function Thing(bodyDef, fixtureDef) {
     //set position
     //this.bodyDef.position.x /= Simulation.SCALE;
     //this.bodyDef.position.y /= Simulation.SCALE;
-    this.bodyDef.position.Multiply(1/Simulation.SCALE);
+    this.bodyDef.position.Multiply(1 / Simulation.SCALE);
 
     this.fixtureDef = [];
     //var def;
@@ -375,22 +377,22 @@ function Thing(bodyDef, fixtureDef) {
 Thing.prototype = {
     //render: function (x, y, angle) {
     //}
-    setRender:function(fn){
-        this.bodyDef.userData.render=fn;
+    setRender: function (fn) {
+        this.bodyDef.userData.render = fn;
     },
-    addFixtureDef:function(fixtureDef){
-        var def=Thing.newFixtureDef();
-        Object.extend(def,fixtureDef);
+    addFixtureDef: function (fixtureDef) {
+        var def = Thing.newFixtureDef();
+        Object.extend(def, fixtureDef);
 
-        var shape=fixtureDef.shape;
-        if(shape instanceof b2CircleShape){
-            var radius=shape.GetRadius()/Simulation.SCALE;
+        var shape = fixtureDef.shape;
+        if (shape instanceof b2CircleShape) {
+            var radius = shape.GetRadius() / Simulation.SCALE;
             shape.SetRadius(radius);
         }
-        if(shape instanceof b2PolygonShape){
+        if (shape instanceof b2PolygonShape) {
             var localVertices = shape.GetVertices();
-            Array.each(localVertices,function(){
-                this.Multiply(1/Simulation.SCALE);
+            Array.each(localVertices, function () {
+                this.Multiply(1 / Simulation.SCALE);
             });
         }
 
@@ -498,43 +500,82 @@ function Resource() {
 //        arrImg.push(img);
 //    });
 //};
-Resource.load=function(res,complete){
-    var len=0;
-    var index=0;
-    var result={};
+Resource.load = function (res, complete, adjust, canvasSize, targetSize) {
+    var len = 0;
+    var index = 0;
+    var result = {};
 
-    function imgLoaded(){
-        this.removeEventListener("load",imgLoaded);
-        index++;
-        //console.log("img loaded");
-        if (index === len && complete) complete(result);
-    }
-    function audioLoaded(){
-        this.removeEventListener("load",audioLoaded);
-        index++;
-        //console.log("audio loaded");
-        if (index === len && complete) complete(result);
+    function adjustRatio() {
+        if (typeof(canvasSize) === "undefined") throw "canvasSize is not defined";
+        if (typeof(targetSize) === "undefined") throw "targetSize is not defined";
+        var canvas, ctx;
+        var sx = canvasSize.width / targetSize.width;
+        var sy = canvasSize.height / targetSize.height;
+
+        var i = 0, len = result.images.length, img;
+        for (; i < len; i++) {
+            img = result.images[i];
+            canvas = document.createElement("canvas");
+            canvas.width = img.width * sx;
+            canvas.height = img.height * sy;
+            ctx = canvas.getContext("2d");
+
+            ctx.save();
+            ctx.scale(sx, sy);
+            ctx.drawImage(img, 0, 0);
+            ctx.restore();
+
+            result.images[i] = canvas;
+        }
     }
 
-    if(res.images) {
-        len+=res.images.length;
-        result.images=[];
+    function imgLoaded() {
+        this.removeEventListener("load", imgLoaded);
+        index++;
+        console.log("img loaded");
+        if (index === len && complete) {
+            console.log(adjust);
+            if (adjust) {
+                console.log("adjust ratio");
+                adjustRatio();
+            }
+            complete(result);
+        }
+    }
+
+    function audioLoaded() {
+        this.removeEventListener("load", audioLoaded);
+        index++;
+        console.log("audio loaded");
+        if (index === len && complete) {
+            console.log(adjust);
+            if (adjust) {
+                console.log("adjust ratio");
+                adjustRatio();
+            }
+            complete(result);
+        }
+    }
+
+    if (res.images) {
+        len += res.images.length;
+        result.images = [];
         var img;
-        Array.each(res.images,function(){
-            img=document.createElement("img");
-            img.addEventListener("load",imgLoaded);
-            img.src=this;
+        Array.each(res.images, function () {
+            img = document.createElement("img");
+            img.addEventListener("load", imgLoaded);
+            img.src = this;
             result.images.push(img);
         });
     }
-    if(res.audioes){
-        len+=res.audioes.length;
-        result.audioes=[];
+    if (res.audioes) {
+        len += res.audioes.length;
+        result.audioes = [];
         var audio;
-        Array.each(res.audioes,function(){
-            audio=document.createElement("audio");
-            audio.addEventListener("canplay",audioLoaded);
-            audio.src=this;
+        Array.each(res.audioes, function () {
+            audio = document.createElement("audio");
+            audio.addEventListener("canplay", audioLoaded);
+            audio.src = this;
             result.audioes.push(audio);
         });
     }

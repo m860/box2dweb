@@ -127,9 +127,17 @@ function Simulation(cfg) {
     this.world.SetDebugDraw(debugDraw);
 
     this.camera=null;
+
+    //start time
+    this.startTime=null;
 }
 Simulation.prototype = {
     run: function () {
+
+        //start time
+        if(!this.startTime){
+            this.startTime=Date.now();
+        }
 
         //on running
         if (this._events["running"]) this._events["running"]();
@@ -201,6 +209,34 @@ Simulation.prototype = {
         //
         camera.ctx=this.setting.ctx;
         this.camera=camera;
+    },
+    getRunDuration:function(){
+        return Date.now()-this.startTime;
+    },
+    getBodyAtMouse:function(mouseX,mouseY){
+        mouseX/=Simulation.SCALE;
+        mouseY/=Simulation.SCALE;
+        var mouseVec=new b2Vec2(mouseX,mouseY);
+
+        var aabb=new Box2D.Collision.b2AABB();
+        aabb.lowerBound.Set(mouseX-0.001,mouseY-0.001);
+        aabb.upperBound.Set(mouseX+0.001,mouseY+0.001);
+
+        var body;
+
+        function query(fixture){
+            var shape=fixture.GetShape();
+            var result=shape.TestPoint(fixture.GetBody().GetTransform(),mouseVec);
+            if(result){
+                body=fixture.GetBody();
+                return false;
+            }
+            return true;
+        }
+
+        this.world.QueryAABB(query,aabb);
+
+        return body;
     }
 };
 //apply IEvent.prototype
@@ -458,16 +494,63 @@ function Resource() {
 //        arrImg.push(img);
 //    });
 //};
-Resource.load=function(res,complete){
+
+/*
+* res={
+*   images{Array{String}}
+*   audioes{Array{String}}
+* }
+* complete{Function}
+* [adjust]{Boolean}
+* [canvasSize]={
+*   width{Number}
+*   height{Number}
+* }
+* [targetSize]={
+*   width{Number}
+*   height{Number}
+* }
+*
+* */
+Resource.load=function(res,complete,adjust,canvasSize,targetSize){
     var len=0;
     var index=0;
     var result={};
+
+    function adjustRatio(){
+        if(typeof(canvasSize)==="undefined") throw "canvasSize is not defined";
+        if(typeof(targetSize)==="undefined") throw "targetSize is not defined";
+        var canvas,ctx;
+        var sx=canvasSize.width/targetSize.width;
+        var sy=canvasSize.height/targetSize.height;
+
+        var i= 0,len=result.images.length,img;
+        for(;i<len;i++){
+            img=result.images[i];
+            canvas=document.createElement("canvas");
+            canvas.width=img.width*sx;
+            canvas.height=img.height*sy;
+            ctx=canvas.getContext("2d");
+
+            ctx.save();
+            ctx.scale(sx,sy);
+            ctx.drawImage(img,0,0);
+            ctx.restore();
+
+            result.images[i]=canvas;
+        }
+    }
 
     function imgLoaded(){
         this.removeEventListener("load",imgLoaded);
         index++;
         console.log("img loaded");
-        if (index === len && complete) complete(result);
+        if (index === len && complete){
+            if(adjust){
+                adjustRatio();
+            }
+            complete(result);
+        }
     }
     function audioLoaded(){
         this.removeEventListener("load",audioLoaded);
