@@ -7,22 +7,21 @@
     <script type="text/javascript" src="Simulation.js"></script>
 </head>
 <body>
+<canvas id="canvas" width="400" height="300"></canvas>
 <script type="application/javascript">
-//    Resource.loadImage(["http://android-wallpapers.25pp.com/20140211/1405/52f9bdb4025b42_900x675.jpg",
-//                "http://t1.gstatic.com/images?q=tbn:ANd9GcQdVmaCpnIsrxWIvNIMyV26xHHZkH_tfm-9PVt7HqOi25k600go"],
-//            function (images) {
-//                console.log("complete");
-//                Array.each(images,function(){
-//                    document.body.appendChild(this);
-//                });
-//            });
-        Resource.load({
-            images:["http://photocdn.sohu.com/20140516/Img399641351.jpg"],
-            audioes:["http://www.w3school.com.cn/i/horse.ogg"]
-        },function(res){
-            console.info(res);
-            res.audioes[0].play();
-        });
+    var canvas = document.querySelector("#canvas");
+    var ctx = canvas.getContext("2d");
+    Resource.load({
+        images: ["http://photocdn.sohu.com/20140516/Img399641351.jpg"],
+        audioes: ["http://www.w3school.com.cn/i/horse.ogg"]
+    }, function (res) {
+        console.info(res);
+    }, false, null, null, function (index,count) {
+        console.log(index);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillText(index/count,0,10);
+        ctx.fillRect(0,30,canvas.width*(index/count),10);
+    });
 </script>
 </body>
 </html>

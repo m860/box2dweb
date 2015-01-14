@@ -60,6 +60,10 @@ Array.each = function (arr, fn) {
         fn.bind(arr[i])();
     }
 };
+//Number.random(min,max)
+Number.random = function (min, max) {
+    return Math.random() * (max - min) + min;
+};
 
 //box2d short class name
 var b2Vec2 = Box2D.Common.Math.b2Vec2,
@@ -118,18 +122,15 @@ function Simulation(cfg) {
     };
     this.world.SetContactFilter(contactFilter);
 
-    //debug draw
-    var debugDraw = new Box2D.Dynamics.b2DebugDraw();
-    debugDraw.SetSprite(this.setting.ctx);
-    debugDraw.SetAlpha(0.5);
-    debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit);//| Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit
-    debugDraw.SetDrawScale(Simulation.SCALE);
-    this.world.SetDebugDraw(debugDraw);
+
 
     this.camera=null;
 
     //start time
     this.startTime=null;
+
+    //debugger
+    this.debugger=null;
 }
 Simulation.prototype = {
     run: function () {
@@ -144,10 +145,7 @@ Simulation.prototype = {
 
         this.world.Step(this.setting.step, this.setting.velocityIterations, this.setting.positionIterations);
 
-        //debug render
-        this.world.DrawDebugData();
-
-        //clear canvas
+        //clear canvas by camera
         var cx,cy;
         if(this.camera){
             cx=this.camera.x;
@@ -156,7 +154,16 @@ Simulation.prototype = {
         else{
             cx=0,cy=0;
         }
-        //this.setting.ctx.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
+        this.setting.ctx.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
+
+        //debug render
+        if(this.debugger){
+            this.debugger.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
+            this.world.DrawDebugData();
+            //draw title
+            this.debugger.fillText("Debugger",0,10);
+        }
+
 
         //debug
         //draw clear rect
@@ -237,6 +244,16 @@ Simulation.prototype = {
         this.world.QueryAABB(query,aabb);
 
         return body;
+    },
+    setDebugger:function(debuggerCtx){
+        this.debugger=debuggerCtx;
+        //debug draw
+        var debugDraw = new Box2D.Dynamics.b2DebugDraw();
+        debugDraw.SetSprite(debuggerCtx);
+        debugDraw.SetAlpha(0.5);
+        debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit);//| Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit
+        debugDraw.SetDrawScale(Simulation.SCALE);
+        this.world.SetDebugDraw(debugDraw);
     }
 };
 //apply IEvent.prototype
@@ -450,7 +467,7 @@ function BodyUserData() {
 }
 BodyUserData.prototype = new UserData();
 BodyUserData.prototype.render = function (ctx, body) {
-    console.log("render body");
+//    console.log("render body");
 };
 
 //fixture user data
@@ -510,9 +527,10 @@ function Resource() {
 *   width{Number}
 *   height{Number}
 * }
+* [processing]{Function}
 *
 * */
-Resource.load=function(res,complete,adjust,canvasSize,targetSize){
+Resource.load=function(res,complete,adjust,canvasSize,targetSize,processing){
     var len=0;
     var index=0;
     var result={};
@@ -544,6 +562,7 @@ Resource.load=function(res,complete,adjust,canvasSize,targetSize){
     function imgLoaded(){
         this.removeEventListener("load",imgLoaded);
         index++;
+        if(processing) processing(index,len);
         console.log("img loaded");
         if (index === len && complete){
             if(adjust){
@@ -553,8 +572,9 @@ Resource.load=function(res,complete,adjust,canvasSize,targetSize){
         }
     }
     function audioLoaded(){
-        this.removeEventListener("load",audioLoaded);
+        this.removeEventListener("canplay",audioLoaded);
         index++;
+        if(processing) processing(index,len);
         console.log("audio loaded");
         if (index === len && complete) complete(result);
     }

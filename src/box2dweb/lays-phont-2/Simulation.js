@@ -4,24 +4,24 @@
 //javascript extend
 
 //requestAnimationFrame
-window.requestAnimationFrame = (function () {
-    return window.requestAnimationFrame
-        || window.webkitRequestAnimationFrame
-        || window.mozRequestAnimationFrame
-        || window.oRequestAnimationFrame
-        || window.msRequestAnimationFrame
-        || function (a, b) {
-        window.setTimeout(a, 1000 / 60);
-    };
-})();
-window.cancelRequestAnimationFrame = (function () {
-    return window.cancelAnimationFrame
-        || window.webkitCancelRequestAnimationFrame
-        || window.mozCancelRequestAnimationFrame
-        || window.oCancelRequestAnimationFrame
-        || window.msCancelRequestAnimationFrame
-        || clearTimeout;
-})();
+//window.requestAnimationFrame = (function () {
+//    return window.requestAnimationFrame
+//        || window.webkitRequestAnimationFrame
+//        || window.mozRequestAnimationFrame
+//        || window.oRequestAnimationFrame
+//        || window.msRequestAnimationFrame
+//        || function (a, b) {
+//            window.setTimeout(a, 1000 / 60);
+//        };
+//})();
+//window.cancelRequestAnimationFrame = (function () {
+//    return window.cancelAnimationFrame
+//        || window.webkitCancelRequestAnimationFrame
+//        || window.mozCancelRequestAnimationFrame
+//        || window.oCancelRequestAnimationFrame
+//        || window.msCancelRequestAnimationFrame
+//        || clearTimeout;
+//})();
 
 //String.format
 String.format = function (str, params) {
@@ -45,7 +45,13 @@ String.format = function (str, params) {
 //Object.extend
 Object.extend = function (origion, target) {
     for (var p in target) {
-        origion[p] = target[p];
+        if (origion[p] instanceof Object) {
+            Object.extend(origion[p], target[p]);
+        }
+        else {
+            origion[p] = target[p];
+        }
+
     }
 }
 //Object.clone
@@ -67,15 +73,15 @@ Number.random = function (min, max) {
 };
 
 //box2d short class name
-var b2Vec2 = Box2D.Common.Math.b2Vec2,
-    b2BodyDef = Box2D.Dynamics.b2BodyDef,
-    b2Body = Box2D.Dynamics.b2Body,
-    b2FixtureDef = Box2D.Dynamics.b2FixtureDef,
-    b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape,
-    b2CircleShape = Box2D.Collision.Shapes.b2CircleShape,
-    b2ContactFilter = Box2D.Dynamics.b2ContactFilter,
-    b2Math = Box2D.Common.Math.b2Math,
-    b2World = Box2D.Dynamics.b2World;
+window["b2Vec2"] = Box2D.Common.Math.b2Vec2;
+window["b2Body"] = Box2D.Dynamics.b2Body;
+//window["b2BodyDef"] = Box2D.Dynamics.b2BodyDef;
+//window["b2FixtureDef"] = Box2D.Dynamics.b2FixtureDef;
+window["b2PolygonShape"] = Box2D.Collision.Shapes.b2PolygonShape;
+window["b2CircleShape"] = Box2D.Collision.Shapes.b2CircleShape;
+//window["b2ContactFilter"] = Box2D.Dynamics.b2ContactFilter;
+window["b2Math"] = Box2D.Common.Math.b2Math;
+//window["b2World"] = Box2D.Dynamics.b2World;
 
 //event interface
 function IEvent() {
@@ -106,11 +112,10 @@ function Simulation(cfg) {
 
     this._timer = null;
     //this.world = new b2World(this.setting.gravity, this.setting.allowSleep);
-    this.world = new b2World(this.setting.gravity, this.setting.allowSleep);
-    //console.log(String.format("allow sleep :{0}",this.setting.allowSleep));
+    this.world = new Box2D.Dynamics.b2World(this.setting.gravity, this.setting.allowSleep);
 
     //contact filter
-    var contactFilter = new b2ContactFilter();
+    var contactFilter = new Box2D.Dynamics.b2ContactFilter();
     contactFilter.ShouldCollide = function (fixA, fixB) {
         if (me._events["shouldcollide"]) return me._events["shouldcollide"](fixA, fixB);
         else {
@@ -123,6 +128,13 @@ function Simulation(cfg) {
     };
     this.world.SetContactFilter(contactFilter);
 
+    //contact listener
+    var contactListener = new Box2D.Dynamics.b2ContactListener();
+    contactListener.BeginContact = function (contact) {
+        if (me._events["BeginContact"]) return me._events["BeginContact"](contact);
+    };
+    this.world.SetContactListener(contactListener);
+
 
     this.camera = null;
 
@@ -134,6 +146,7 @@ function Simulation(cfg) {
 }
 Simulation.prototype = {
     run: function () {
+
         //start time
         if (!this.startTime) {
             this.startTime = Date.now();
@@ -155,17 +168,23 @@ Simulation.prototype = {
         }
         this.setting.ctx.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
 
+        //debug render
+        if (this.debugger) {
+            this.debugger.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
+            this.world.DrawDebugData();
+            //draw title
+            this.debugger.fillText("Debugger", 0, 10);
+        }
+
+
         //debug
         //draw clear rect
-//        this.setting.ctx.save();
-//        this.setting.ctx.globalAlpha = 0.3;
-//        this.setting.ctx.strokeStyle = "red";
-//        this.setting.ctx.strokeRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
-//        this.setting.ctx.restore();
+        this.setting.ctx.save();
+        this.setting.ctx.globalAlpha = 0.3;
+        this.setting.ctx.strokeStyle = "red";
+        this.setting.ctx.strokeRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
+        this.setting.ctx.restore();
 
-        if (this.debugger) {
-            this.world.DrawDebugData();
-        }
         //render event
         if (this._events["rendering"]) this._events["rendering"](this.setting.ctx);
 
@@ -175,7 +194,12 @@ Simulation.prototype = {
         while (body) {
             userData = body.GetUserData();
             if (userData) {
-                userData.render(this.setting.ctx, body);
+                if (userData.destroy) {
+                    this.world.DestroyBody(body);
+                }
+                else {
+                    userData.render(this.setting.ctx, body);
+                }
             }
             body = body.GetNext();
         }
@@ -188,9 +212,12 @@ Simulation.prototype = {
         this._timer = setTimeout(this.run.bind(this), 1000 * this.setting.step);
     },
     pause: function () {
-        //window.cancelRequestAnimationFrame(this._timer);
-        clearTimeout(this._timer);
-        this._timer = null;
+//        window.cancelRequestAnimationFrame(this._timer);
+        if (this._timer) {
+            clearTimeout(this._timer);
+            this._timer = null;
+        }
+
     },
     createThing: function (thing) {
         //create body
@@ -211,6 +238,9 @@ Simulation.prototype = {
         //
         camera.ctx = this.setting.ctx;
         this.camera = camera;
+    },
+    getRunDuration: function () {
+        return Date.now() - this.startTime;
     },
     getBodyAtMouse: function (mouseX, mouseY) {
         mouseX /= Simulation.SCALE;
@@ -237,17 +267,13 @@ Simulation.prototype = {
 
         return body;
     },
-    getRunDuration: function () {
-        return Date.now() - this.startTime;
-    },
-    setDebugger: function (ctx) {
-        this.debugger = ctx;
-
+    setDebugger: function (debuggerCtx) {
+        this.debugger = debuggerCtx;
         //debug draw
         var debugDraw = new Box2D.Dynamics.b2DebugDraw();
-        debugDraw.SetSprite(ctx);
+        debugDraw.SetSprite(debuggerCtx);
         debugDraw.SetAlpha(0.5);
-        debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit | Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit);//| Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit
+        debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit);//| Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit
         debugDraw.SetDrawScale(Simulation.SCALE);
         this.world.SetDebugDraw(debugDraw);
     }
@@ -407,12 +433,12 @@ Thing.prototype = {
     }
 };
 Thing.newBodyDef = function () {
-    var def = new b2BodyDef();
+    var def = new Box2D.Dynamics.b2BodyDef();
     def.userData = new BodyUserData();
     return def;
 };
 Thing.newFixtureDef = function () {
-    var def = new b2FixtureDef();
+    var def = new Box2D.Dynamics.b2FixtureDef();
     def.density = 1.0;
     def.restitution = 0.2;//0.2
     def.friction = 0.5;//0.5
@@ -463,7 +489,6 @@ function BodyUserData() {
 }
 BodyUserData.prototype = new UserData();
 BodyUserData.prototype.render = function (ctx, body) {
-    //console.log("render body");
 };
 
 //fixture user data
@@ -507,7 +532,26 @@ function Resource() {
 //        arrImg.push(img);
 //    });
 //};
-Resource.load = function (res, complete, adjust, canvasSize, targetSize) {
+
+/*
+ * res={
+ *   images{Array{String}}
+ *   audioes{Array{String}}
+ * }
+ * complete{Function}
+ * [adjust]{Boolean}
+ * [canvasSize]={
+ *   width{Number}
+ *   height{Number}
+ * }
+ * [targetSize]={
+ *   width{Number}
+ *   height{Number}
+ * }
+ * [processing]{Function}
+ *
+ * */
+Resource.load = function (res, complete, adjust, canvasSize, targetSize, processing) {
     var len = 0;
     var index = 0;
     var result = {};
@@ -518,6 +562,8 @@ Resource.load = function (res, complete, adjust, canvasSize, targetSize) {
         var canvas, ctx;
         var sx = canvasSize.width / targetSize.width;
         var sy = canvasSize.height / targetSize.height;
+
+        Resource.scale = {x: sx, y: sy};
 
         var i = 0, len = result.images.length, img;
         for (; i < len; i++) {
@@ -539,11 +585,9 @@ Resource.load = function (res, complete, adjust, canvasSize, targetSize) {
     function imgLoaded() {
         this.removeEventListener("load", imgLoaded);
         index++;
-        console.log("img loaded");
+        if (processing) processing(index, len);
         if (index === len && complete) {
-            console.log(adjust);
             if (adjust) {
-                console.log("adjust ratio");
                 adjustRatio();
             }
             complete(result);
@@ -551,13 +595,11 @@ Resource.load = function (res, complete, adjust, canvasSize, targetSize) {
     }
 
     function audioLoaded() {
-        this.removeEventListener("load", audioLoaded);
+        this.removeEventListener("canplay", audioLoaded);
         index++;
-        console.log("audio loaded");
+        if (processing) processing(index, len);
         if (index === len && complete) {
-            console.log(adjust);
             if (adjust) {
-                console.log("adjust ratio");
                 adjustRatio();
             }
             complete(result);

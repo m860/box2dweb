@@ -1,10 +1,11 @@
-var canvas = document.createElement("canvas");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-document.body.appendChild(canvas);
+//var canvas = document.createElement("canvas");
+var canvas = document.querySelector("#canvas2");
+//canvas.width = 480;//window.innerWidth;
+//canvas.height = 800;//window.innerHeight;
+//document.body.appendChild(canvas);
 
-var scaleX = canvas.width / 480;
-var scaleY = canvas.height / 800;
+//var scaleX = canvas.width / 480;
+//var scaleY = canvas.height / 800;
 
 var ctx = canvas.getContext("2d");
 //ctx.scale(scaleX,scaleY);
@@ -92,6 +93,7 @@ function initSimulation() {
         allowSleep: false,
         step: 1 / 16
     });
+    simulation.setDebugger(document.querySelector("#canvas").getContext("2d"));
     //simulation.setting.ctx.scale(scaleX,scaleY);
     simulation.on("shouldcollide", function (fa, fb) {
         var ua = fa.GetUserData();
@@ -129,7 +131,7 @@ function toStartPage() {
         //ctx.restore();
 
         ctx.save();
-        ctx.scale(scaleX, scaleY);
+//        ctx.scale(scaleX, scaleY);
         ctx.globalAlpha = alpha;
         ctx.drawImage(res.images[1], 180, 600);
         ctx.restore();
@@ -204,7 +206,8 @@ function toGamePage() {
     var photo = new Thing({
         type: b2Body.b2_dynamicBody,
         position: randomPhotoPos(),
-        linearVelocity: v0Vec.Copy()
+        linearVelocity: v0Vec.Copy(),
+        angularVelocity: 10
     });
     shape = new b2PolygonShape();
     shape.SetAsBox(res.images[2].width / 2, res.images[2].height / 2);
@@ -220,7 +223,7 @@ function toGamePage() {
         position: new b2Vec2(hw, (canvas.height - res.images[10].height) / 2)
     });
     shape = new b2PolygonShape();
-    shape.SetAsBox((res.images[3].width / 2) * scaleX, (res.images[3].height / 2) * scaleY);
+    shape.SetAsBox((res.images[3].width / 2) , (res.images[3].height / 2) );
     frame.addFixtureDef({
         shape: shape
     });
@@ -231,7 +234,7 @@ function toGamePage() {
     function getLogoPos() {
         var pos = photo.body.GetPosition().Copy();
         pos.Multiply(Simulation.SCALE);
-        return new b2Vec2(pos.x/Simulation.SCALE, (pos.y - 50)/Simulation.SCALE)
+        return new b2Vec2(pos.x / Simulation.SCALE, (pos.y - 50) / Simulation.SCALE)
     }
 
 
@@ -287,15 +290,19 @@ function toGamePage() {
         pos.Multiply(Simulation.SCALE);
         var left = pos.x - res.images[2].width / 2;
         var top = pos.y - res.images[2].height / 2;
+        ctx.save();
+        ctx.translate(left, top);
+        ctx.rotate(photo.body.GetAngle());
+        ctx.translate(-left, -top);
         ctx.drawImage(res.images[2], left, top);
+        ctx.restore();
 
         //draw mask
         ctx.save();
-        ctx.fillStyle="black";
-        ctx.globalAlpha=0.8;
-        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = "black";
+        ctx.globalAlpha = 0.8;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
-
 
 
         //draw btn
@@ -307,16 +314,19 @@ function toGamePage() {
         pos.Multiply(Simulation.SCALE);
 
         //draw photo2
-        var clipLeft=pos.x - res.images[3].width / 2;
-        var clipTop=pos.y - res.images[3].height / 2;
+        var clipLeft = pos.x - res.images[3].width / 2;
+        var clipTop = pos.y - res.images[3].height / 2;
         ctx.save();
         ctx.beginPath();
-        ctx.moveTo(clipLeft,clipTop);
-        ctx.lineTo(clipLeft+res.images[3].width,clipTop);
-        ctx.lineTo(clipLeft+res.images[3].width,clipTop+res.images[3].height);
-        ctx.lineTo(clipLeft,clipTop+res.images[3].height);
+        ctx.moveTo(clipLeft, clipTop);
+        ctx.lineTo(clipLeft + res.images[3].width, clipTop);
+        ctx.lineTo(clipLeft + res.images[3].width, clipTop + res.images[3].height);
+        ctx.lineTo(clipLeft, clipTop + res.images[3].height);
         ctx.closePath();
         ctx.clip();
+        ctx.translate(left, top);
+        ctx.rotate(photo.body.GetAngle());
+        ctx.translate(-left, -top);
         ctx.drawImage(res.images[2], left, top);
         ctx.restore();
 
@@ -347,39 +357,34 @@ function toGamePage() {
                     //console.log("-->Action photo");
                     simulation.pause();
                     canvas.removeEventListener("mousedown", mouseDown);
+
+                    function calculateScore() {
+                        //calculate score
+                        var logoPos = getLogoPos();
+                        logoPos.Multiply(Simulation.SCALE);
+                        var framePos = frame.body.GetPosition().Copy();
+                        framePos.Multiply(Simulation.SCALE);
+                        var lenVec = new b2Vec2(framePos.x - logoPos.x, framePos.y - logoPos.y);
+                        var len = lenVec.Length();
+
+//                        var score = 100 - len;
+//                        if (score < 0) score = 0;
+//                        else if (score > 99.5) score = 100;
+
+                        var score = (10000 - len) / 100.00;
+                        if (len > 10000) score = 0.00;
+
+                        return score.toFixed(2);
+                    }
+
                     //play audio
-                    //function audioEnd() {
-                    //    res.audioes[0].removeEventListener("ended", audioEnd);
-                    //    //calculate score
-                    //    var logoPos = logo.body.GetPosition().Copy();
-                    //    logoPos.Multiply(Simulation.SCALE);
-                    //    var framePos = frame.body.GetPosition().Copy();
-                    //    framePos.Multiply(Simulation.SCALE);
-                    //    var lenVec = new b2Vec2(framePos.x - logoPos.x, framePos.y - logoPos.y);
-                    //    var len = lenVec.Length();
-                    //    var score = (10000 - len) / 100.00;
-                    //    if (len > 10000) score = 0.00;
-                    //    toStop(score.toFixed(2));
-                    //}
-                    //
-                    //res.audioes[0].addEventListener("ended", audioEnd);
-                    //res.audioes[0].play();
-
-                    //calculate score
-                    var logoPos = getLogoPos();
-                    logoPos.Multiply(Simulation.SCALE);
-                    var framePos = frame.body.GetPosition().Copy();
-                    framePos.Multiply(Simulation.SCALE);
-                    var lenVec = new b2Vec2(framePos.x - logoPos.x, framePos.y - logoPos.y);
-                    var len = lenVec.Length();
-                    var score = (10000 - len) / 100.00;
-                    if (len > 10000) score = 0.00;
-
-                    var _t=setTimeout(function(){
-                        clearTimeout(_t);
-                        toStop(score.toFixed(2));
-                    },1000);
-
+                    function audioEnd() {
+                        res.audioes[0].removeEventListener("ended", audioEnd);
+                        //calculate score
+                        toStop(calculateScore());
+                    }
+                    res.audioes[0].addEventListener("ended", audioEnd);
+                    res.audioes[0].play();
                 }
             }
         }

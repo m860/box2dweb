@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style type="text/css">
+        * {
+            padding: 0px;
+            margin: 0px;
+        }
+
+        body {
+            overflow: hidden;
+        }
+    </style>
+    <script type="text/javascript" src="Box2dWeb-2.1.a.3.min.js"></script>
+    <script type="text/javascript" src="Simulation.min.js"></script>
+</head>
+<body>
+<canvas id="canvas" width="480" height="800"></canvas>
+<!--<canvas id="canvas" width="360" height="600"></canvas>-->
+<!--<canvas id="debug_canvas" width="360" height="600"></canvas>-->
+<script type="text/javascript">
+    var canvas = document.querySelector("#canvas")
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    var ctx = canvas.getContext("2d");
+//    var debugCanvas = document.querySelector("#debug_canvas");
+//    var debugCtx = debugCanvas.getContext("2d");
+
+    var simulation;
+    var res;
+    var shape;
+
+    //load resource
+    Resource.load({
+        images: ["res/1.jpg",
+            "res/2.png",
+            "res/3.png",
+            "res/4.png",
+            "res/5.png",
+            "res/6.png",
+            "res/7.png",
+            "res/8.png",
+            "res/9.png",
+            "res/10.jpg",
+            "res/11.jpg",
+            "res/zero.png",//11
+            "res/one.png",
+            "res/two.png",
+            "res/three.png",
+            "res/four.png",
+            "res/five.png",
+            "res/six.png",
+            "res/seven.png",
+            "res/eight.png",
+            "res/nine.png",
+            "res/dot.png"//21
+        ], audioes: ["res/photo.mp3"]
+    }, function (result) {
+        res = result;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        toReadyPage();
+    }, true, {width: canvas.width, height: canvas.height}, {width: 480, height: 800}, function (index, length) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillText(index / length, 0, 10);
+    });
+
+
+    function drawScore(ctx, score) {
+        var left, top = 100 * Resource.scale.y+120*Resource.scale.y;
+        var scoreStr = new String(score);
+        var i = 0, len = scoreStr.length;
+        left = (window.innerWidth - (len * res.images[11].width)) / 2;
+        var index;
+        for (; i < len; i++) {
+            if (scoreStr[i] === ".") {
+                index = 21;
+            }
+            else {
+                index = parseInt(scoreStr[i]) + 11;
+            }
+            ctx.drawImage(res.images[index], left, top);
+            left += res.images[11].width;
+        }
+    }
+
+    function toReadyPage() {
+        simulation = new Simulation({
+            ctx: ctx
+        });
+
+        //canvas click
+        function canvasClick() {
+            canvas.removeEventListener("click", canvasClick);
+
+            simulation.pause();
+
+            //to description page
+            toDescriptionPage();
+        }
+
+        canvas.addEventListener("click", canvasClick);
+
+        var alpha = 0;
+        var direction = 1;
+
+        simulation.on("rendering", function (ctx) {
+
+            //draw background
+            ctx.drawImage(res.images[0], 0, 0);
+
+            //draw start button
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.drawImage(res.images[1], 180 * Resource.scale.x, 600 * Resource.scale.y);
+            ctx.restore();
+            if (alpha <= 0) direction = 1;
+            if (alpha >= 1) direction = 0
+            if (direction === 1) {
+                alpha += simulation.setting.step;
+                alpha = alpha > 1 ? 1 : alpha;
+            }
+            else {
+                alpha -= simulation.setting.step;
+                alpha = alpha < 0 ? 0 : alpha;
+            }
+
+
+        });
+
+        //run
+        simulation.run();
+    }
+
+    function toDescriptionPage() {
+        //to game page
+        toGamePage();
+    }
+
+    function toGamePage() {
+        simulation = new Simulation({
+            ctx: ctx
+        });
+
+        //set debug
+//    simulation.setDebugger(debugCtx);
+
+        //button body
+        var button = new Thing({
+            type: b2Body.b2_staticBody,
+            position: new b2Vec2(canvas.width / 2, (canvas.height - res.images[10].height) + res.images[10].height / 2),
+            userData: {
+                id: "button_photo"
+            }
+        });
+        shape = new b2PolygonShape();
+        shape.SetAsBox(canvas.width / 2, res.images[10].height / 2);
+        button.addFixtureDef({
+            shape: shape,
+            restitution: 0
+        });
+        simulation.createThing(button);
+
+        //photo body
+        var photo = new Thing({
+            type: b2Body.b2_dynamicBody,
+            position: new b2Vec2(canvas.width / 2, 0),
+            angle: Number.random(0, Math.PI * 2),
+            angularVelocity: Number.random(5, 10),
+            userData: {
+                id: "body_photo"
+            }
+        });
+        shape = new b2PolygonShape();
+        shape.SetAsBox(res.images[2].width / 2, res.images[2].height / 2);
+        photo.addFixtureDef({
+            shape: shape,
+            restitution: 0
+        });
+        simulation.createThing(photo);
+
+        //frame position
+        var framePos = new b2Vec2((canvas.width - res.images[3].width) / 2, (canvas.height - res.images[10].height - res.images[3].height) / 2);
+
+        //button position
+        var buttonPos = new b2Vec2(0, canvas.height - res.images[10].height);
+
+        var isEnd = false;
+
+        function end() {
+
+            canvas.removeEventListener("mousedown", mouseDown);
+
+            function calculateScore() {
+                //calculate score
+                var score=0;
+                var p1=photo.body.GetPosition().Copy();
+                p1.Multiply(Simulation.SCALE);
+                var p2=framePos.Copy();
+                p2.x+=res.images[3].width/2;
+                var disVec=new b2Vec2(p1.x-p2.x,p1.y-p2.y);
+                var dis=disVec.Length();
+                score=(10000-dis*10)/100;
+
+                return score.toFixed(2);
+            }
+
+            //play audio
+            function audioEnd() {
+                simulation.pause();
+                res.audioes[0].removeEventListener("ended", audioEnd);
+                //calculate score
+                toStopPage(calculateScore());
+            }
+
+            res.audioes[0].addEventListener("ended", audioEnd);
+            res.audioes[0].load();
+            res.audioes[0].play();
+            isEnd = true;
+
+//        setTimeout(function(){
+//            toStopPage(calculateScore());
+//        },1000);
+//        toStopPage(calculateScore());
+        }
+
+        var estep = (canvas.height / res.audioes[0].duration) * simulation.setting.step;
+        var eheight = 0;
+        var direction = 1;
+
+
+        function drawPhotoEffect(ctx) {
+            if (!isEnd) end();
+
+//        ctx.save();
+//        ctx.globalAlpha=0.5;
+            //draw top
+            ctx.fillRect(0, 0, canvas.width, eheight);
+
+            //draw bottom
+            ctx.fillRect(0, canvas.height - eheight, canvas.width, eheight);
+
+//        ctx.restore();
+
+            if (direction === 1) {
+                eheight += estep;
+            }
+            else {
+                eheight -= estep
+            }
+
+            if (eheight === canvas.height / 2) {
+                direction = 0;
+            }
+        }
+
+        //rendering
+        simulation.on("rendering", function (ctx) {
+            //draw background
+            ctx.drawImage(res.images[9], 0, 0);
+
+            //draw photo button
+            ctx.drawImage(res.images[10], buttonPos.x, buttonPos.y);
+
+            //draw photo
+            var photoPos;
+            photoPos = photo.body.GetPosition().Copy();
+            photoPos.Multiply(Simulation.SCALE);
+            ctx.save();
+            ctx.translate(photoPos.x, photoPos.y);
+            ctx.rotate(photo.body.GetAngle());
+            ctx.translate(-photoPos.x, -photoPos.y);
+            ctx.drawImage(res.images[2], photoPos.x - res.images[2].width / 2, photoPos.y - res.images[2].height / 2);
+            ctx.restore();
+
+            //draw mask
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height - res.images[10].height);
+            ctx.restore();
+
+            //draw mask photo
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(framePos.x, framePos.y);
+            ctx.lineTo(framePos.x + res.images[3].width, framePos.y);
+            ctx.lineTo(framePos.x + res.images[3].width, framePos.y + res.images[3].height);
+            ctx.lineTo(framePos.x, framePos.y + res.images[3].height);
+            ctx.closePath();
+            ctx.clip();
+            ctx.translate(photoPos.x, photoPos.y);
+            ctx.rotate(photo.body.GetAngle());
+            ctx.translate(-photoPos.x, -photoPos.y);
+            ctx.drawImage(res.images[2], photoPos.x - res.images[2].width / 2, photoPos.y - res.images[2].height / 2);
+            ctx.restore();
+
+            //draw frame
+            ctx.drawImage(res.images[3], framePos.x, framePos.y);
+
+//        if (photo.body != null && photo.body.GetUserData().destroy) {
+//            end();
+//        }
+            if (photo.body.GetType() === b2Body.b2_staticBody) {
+                drawPhotoEffect(ctx);
+            }
+        }).on("BeginContact", function (contact) {
+            var ba = contact.GetFixtureA().GetBody();
+            var bb = contact.GetFixtureB().GetBody();
+            var ua = ba.GetUserData();
+            var ub = bb.GetUserData();
+            if (ua && ua.id == "body_photo") {
+                //ua.destroy = true;
+                ba.SetType(b2Body.b2_staticBody);
+            }
+            else if (ub && ub.id == "body_photo") {
+                //ub.destroy = true;
+                bb.SetType(b2Body.b2_staticBody);
+            }
+        });
+
+        function mouseDown(evt) {
+            mouseX = evt.clientX;
+            mouseY = evt.clientY;
+
+            //find body
+            var mouseBody = simulation.getBodyAtMouse(mouseX, mouseY);
+            if (mouseBody) {
+                var userData = mouseBody.GetUserData();
+                if (userData) {
+                    var id = userData.id;
+                    if (id === "button_photo") {
+                        photo.body.SetType(b2Body.b2_staticBody);
+//                    end();
+                    }
+                }
+            }
+        }
+
+        canvas.addEventListener("mousedown", mouseDown);
+
+        //run
+        simulation.run();
+    }
+
+    function toStopPage(score) {
+        simulation = new Simulation({
+            ctx: ctx
+        });
+
+        //set debug
+//    simulation.setDebugger(debugCtx);
+
+        //share button
+        var shareButton = new Thing({
+            type: b2Body.b2_staticBody,
+            position: new b2Vec2(canvas.width / 2,
+                    score >= 100 ? ((416 + res.images[5].height / 2)*Resource.scale.y) : ((416 + res.images[8].height / 2)*Resource.scale.y))
+        });
+        shape = new b2PolygonShape();
+        if (score >= 100) {
+            shape.SetAsBox(res.images[5].width / 2, res.images[5].height / 2);
+            shareButton.bodyDef.userData.id = "share_success";
+        }
+        else {
+            shape.SetAsBox(res.images[8].width / 2, res.images[8].height / 2);
+            shareButton.bodyDef.userData.id = "share_fail";
+        }
+        shareButton.addFixtureDef({
+            shape: shape
+        });
+
+        simulation.createThing(shareButton);
+
+        //again button
+        var againButton = new Thing({
+            type: b2Body.b2_staticBody,
+            position: new b2Vec2(canvas.width / 2, (486 + res.images[6].height / 2)*Resource.scale.y)
+        });
+        shape = new b2PolygonShape();
+        shape.SetAsBox(res.images[6].width / 2, res.images[6].height / 2);
+        againButton.bodyDef.userData.id = "again";
+        againButton.addFixtureDef({
+            shape: shape
+        });
+        simulation.createThing(againButton);
+
+        //buy button
+        var buyButton = new Thing({
+            type: b2Body.b2_staticBody,
+            position: new b2Vec2(canvas.width / 2, (345 + res.images[7].height / 2)*Resource.scale.y)
+        });
+        shape = new b2PolygonShape();
+        shape.SetAsBox(res.images[7].width / 2, res.images[7].height / 2);
+        buyButton.bodyDef.userData.id = "buy";
+        buyButton.addFixtureDef({
+            shape: shape
+        });
+
+        simulation.createThing(buyButton);
+
+        //rendering
+        simulation.on("rendering", function (ctx) {
+            //draw background
+            ctx.drawImage(res.images[9], 0, 0);
+            //draw title
+            ctx.drawImage(res.images[4], (canvas.width - res.images[4].width) / 2, 100 * Resource.scale.y);
+//            ctx.strokeRect((canvas.width - res.images[4].width) / 2, 100* Resource.scale.y, res.images[4].width, res.images[4].height);
+            //TODO draw scroe
+            drawScore(ctx, score);
+            //draw buy button
+            if (score < 100) {
+                ctx.drawImage(res.images[7], (canvas.width - res.images[7].width) / 2, 345* Resource.scale.y);
+            }
+//        draw share button
+            if (score >= 100) {
+                ctx.drawImage(res.images[5], (canvas.width - res.images[5].width) / 2, 416* Resource.scale.y);
+            }
+            else {
+                ctx.drawImage(res.images[8], (canvas.width - res.images[8].width) / 2, 416* Resource.scale.y);
+            }
+            //draw again button
+            ctx.drawImage(res.images[6], (canvas.width - res.images[6].width) / 2, 486* Resource.scale.y);
+
+        });
+
+        function mouseDown(evt) {
+            mouseX = evt.clientX;
+            mouseY = evt.clientY;
+
+            //find body
+            var mouseBody = simulation.getBodyAtMouse(mouseX, mouseY);
+            if (mouseBody) {
+                var userData = mouseBody.GetUserData();
+                if (userData) {
+                    var id = userData.id;
+                    if (id === "again") {
+                        canvas.removeEventListener("mousedown", mouseDown);
+                        simulation.pause();
+                        toGamePage();
+                    }
+                    else if (id === "share_success") {
+                        simulation.pause();
+                        alert("share success");
+                    }
+                    else if (id === "share_fail") {
+                        simulation.pause();
+                        alert("share fail");
+                    }
+                    else if (id === "buy") {
+                        window.location.href = "http://detail.tmall.com/item.htm?spm=a220m.1000858.1000725.11.YV0VTk&id=42218249545&skuId=70330181835&areaId=110100&cat_id=53628004&rn=5842cf32982713c8fc0bedd9a6e57322&user_id=1705228750&is_b=1";
+                    }
+                }
+            }
+        }
+
+        canvas.addEventListener("mousedown", mouseDown);
+
+        //run
+        simulation.run();
+    }
+</script>
+</body>
+
+</html>

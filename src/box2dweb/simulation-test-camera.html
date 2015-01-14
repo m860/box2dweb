@@ -9,9 +9,10 @@
 </head>
 <body>
 <canvas id="canvas" width="400" height="300"></canvas>
+<canvas id="debug_canvas" width="400" height="300"></canvas>
 <script type="application/javascript">
     var canvas=document.querySelector("#canvas");
-
+    var debugCanvas=document.querySelector("#debug_canvas");
     //new simulation
     var simulation=new Simulation({
         ctx:canvas.getContext("2d"),
@@ -158,6 +159,9 @@
         ctx.stroke();
         ctx.restore();
     });
+
+    //set debug
+    simulation.setDebugger(debugCanvas.getContext("2d"));
 
     //run
     simulation.run();
