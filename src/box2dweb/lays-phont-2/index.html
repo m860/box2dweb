@@ -55,19 +55,21 @@
             "res/eight.png",
             "res/nine.png",
             "res/dot.png"//21
+            ,"res/bg_end.jpg"
         ], audioes: ["res/photo.mp3"]
     }, function (result) {
         res = result;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         toReadyPage();
     }, true, {width: canvas.width, height: canvas.height}, {width: 480, height: 800}, function (index, length) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillText(index / length, 0, 10);
+        //ctx.clearRect(0, 0, canvas.width, canvas.height);
+        //ctx.drawImage(res.images[22],0,0);
+        //ctx.fillText(index / length, 0, 10);
     });
 
 
     function drawScore(ctx, score) {
-        var left, top = 100 * Resource.scale.y+120*Resource.scale.y;
+        var left, top = 311 * Resource.scale.y;
         var scoreStr = new String(score);
         var i = 0, len = scoreStr.length;
         left = (window.innerWidth - (len * res.images[11].width)) / 2;
@@ -355,7 +357,7 @@
         var shareButton = new Thing({
             type: b2Body.b2_staticBody,
             position: new b2Vec2(canvas.width / 2,
-                    score >= 100 ? ((416 + res.images[5].height / 2)*Resource.scale.y) : ((416 + res.images[8].height / 2)*Resource.scale.y))
+                    score >= 100 ? ((524 + res.images[5].height / 2)*Resource.scale.y) : ((524 + res.images[8].height / 2)*Resource.scale.y))
         });
         shape = new b2PolygonShape();
         if (score >= 100) {
@@ -375,7 +377,7 @@
         //again button
         var againButton = new Thing({
             type: b2Body.b2_staticBody,
-            position: new b2Vec2(canvas.width / 2, (486 + res.images[6].height / 2)*Resource.scale.y)
+            position: new b2Vec2(canvas.width / 2, (608 + res.images[6].height / 2)*Resource.scale.y)
         });
         shape = new b2PolygonShape();
         shape.SetAsBox(res.images[6].width / 2, res.images[6].height / 2);
@@ -388,7 +390,7 @@
         //buy button
         var buyButton = new Thing({
             type: b2Body.b2_staticBody,
-            position: new b2Vec2(canvas.width / 2, (345 + res.images[7].height / 2)*Resource.scale.y)
+            position: new b2Vec2(canvas.width / 2, (440 + res.images[7].height / 2)*Resource.scale.y)
         });
         shape = new b2PolygonShape();
         shape.SetAsBox(res.images[7].width / 2, res.images[7].height / 2);
@@ -402,26 +404,38 @@
         //rendering
         simulation.on("rendering", function (ctx) {
             //draw background
-            ctx.drawImage(res.images[9], 0, 0);
+            ctx.drawImage(res.images[22], 0, 0);
             //draw title
-            ctx.drawImage(res.images[4], (canvas.width - res.images[4].width) / 2, 100 * Resource.scale.y);
+//            ctx.drawImage(res.images[4], (canvas.width - res.images[4].width) / 2, 100 * Resource.scale.y);
 //            ctx.strokeRect((canvas.width - res.images[4].width) / 2, 100* Resource.scale.y, res.images[4].width, res.images[4].height);
             //TODO draw scroe
             drawScore(ctx, score);
+
+            var pos;
+
             //draw buy button
+            pos=buyButton.body.GetPosition().Copy();
+            pos.Multiply(Simulation.SCALE);
             if (score < 100) {
-                ctx.drawImage(res.images[7], (canvas.width - res.images[7].width) / 2, 345* Resource.scale.y);
+                //ctx.drawImage(res.images[7], (canvas.width - res.images[7].width) / 2, 440* Resource.scale.y);
+                ctx.drawImage(res.images[7], pos.x-(res.images[7].width/2), pos.y-(res.images[7].height/2));
             }
 //        draw share button
+            pos=shareButton.body.GetPosition().Copy();
+            pos.Multiply(Simulation.SCALE);
             if (score >= 100) {
-                ctx.drawImage(res.images[5], (canvas.width - res.images[5].width) / 2, 416* Resource.scale.y);
+                //ctx.drawImage(res.images[5], (canvas.width - res.images[5].width) / 2, 524* Resource.scale.y);
+                ctx.drawImage(res.images[5], pos.x-(res.images[5].width/2), pos.y-(res.images[5].height/2));
             }
             else {
-                ctx.drawImage(res.images[8], (canvas.width - res.images[8].width) / 2, 416* Resource.scale.y);
+                //ctx.drawImage(res.images[8], (canvas.width - res.images[8].width) / 2, 524* Resource.scale.y);
+                ctx.drawImage(res.images[8], pos.x-(res.images[8].width/2), pos.y-(res.images[8].height/2));
             }
             //draw again button
-            ctx.drawImage(res.images[6], (canvas.width - res.images[6].width) / 2, 486* Resource.scale.y);
-
+            pos=againButton.body.GetPosition().Copy();
+            pos.Multiply(Simulation.SCALE);
+            //ctx.drawImage(res.images[6], (canvas.width - res.images[6].width) / 2, 608* Resource.scale.y);
+            ctx.drawImage(res.images[6], pos.x-(res.images[6].width/2), pos.y-(res.images[6].height/2));
         });
 
         function mouseDown(evt) {
