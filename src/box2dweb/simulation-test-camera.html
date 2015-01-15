@@ -5,7 +5,6 @@
     <title></title>
     <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
     <script type="text/javascript" src="Simulation.js"></script>
-    <script type="text/javascript" src="Simulation-debugger.js"></script>
 </head>
 <body>
 <canvas id="canvas" width="400" height="300"></canvas>
@@ -39,7 +38,8 @@
         shape=new b2PolygonShape();
         shape.SetAsBox(5,hh);
         left.addFixtureDef({shape:shape});
-        left.bodyDef.userData.render=this.render;
+//        left.bodyDef.userData.render=this.render;
+        left.on("update",this.render);
         sim.createThing(left);
 
         var right=new Thing({
@@ -49,7 +49,8 @@
         shape=new b2PolygonShape();
         shape.SetAsBox(5,hh);
         right.addFixtureDef({shape:shape});
-        right.bodyDef.userData.render=this.render;
+//        right.bodyDef.userData.render=this.render;
+        right.on("update",this.render);
         sim.createThing(right);
 
         var top=new Thing({
@@ -59,7 +60,8 @@
         shape=new b2PolygonShape();
         shape.SetAsBox(hw,5);
         top.addFixtureDef({shape:shape});
-        top.bodyDef.userData.render=this.render;
+//        top.bodyDef.userData.render=this.render;
+        top.on("update",this.render);
         sim.createThing(top);
 
         var bottom=new Thing({
@@ -69,8 +71,10 @@
         shape=new b2PolygonShape();
         shape.SetAsBox(hw,5);
         bottom.addFixtureDef({shape:shape});
-        bottom.bodyDef.userData.render=this.render;
+//        bottom.bodyDef.userData.render=this.render;
+        bottom.on("update",this.render);
         sim.createThing(bottom);
+
     }
     Region.prototype = {
         render:function(ctx,body){
@@ -124,7 +128,35 @@
         restitution:1,
         friction:0
     });
-    circle.setRender(renderCircle);
+//    circle.setRender(renderCircle);
+    circle.on("update",function(ctx,body){
+        var fixture = body.GetFixtureList();
+        var angle=body.GetAngle();
+        while (fixture) {
+            var shape = fixture.GetShape();
+            if (!shape) return;
+            var radius = shape.GetRadius() * Simulation.SCALE;
+            var pos = body.GetPosition().Copy();
+            pos.Multiply(Simulation.SCALE);
+
+            ctx.save();
+            //ctx.translate(pos.x,pos.y);
+            //ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+            ctx.globalAlpha=0.8;
+            ctx.strokeStyle="green";
+            ctx.stroke();
+            ctx.restore();
+
+            //draw center
+            //ctx.beginPath();
+            //ctx.arc(pos.x, pos.y, 1, 0, Math.PI * 2);
+            //ctx.stroke();
+
+            fixture = fixture.GetNext();
+        }
+    });
     simulation.createThing(circle);
 //    camera.lookAt(circle.body);
 
@@ -164,7 +196,7 @@
     simulation.setDebugger(debugCanvas.getContext("2d"));
 
     //run
-    simulation.run();
+    simulation.start();
 
 </script>
 </body>

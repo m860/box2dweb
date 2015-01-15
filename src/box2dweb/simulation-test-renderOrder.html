@@ -5,12 +5,14 @@
     <title></title>
     <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
     <script type="text/javascript" src="Simulation.js"></script>
-    <script type="text/javascript" src="Simulation-debugger.js"></script>
 </head>
 <body>
+<div>render顺序是:先创建的BODY后render</div>
 <canvas id="canvas" width="400" height="300"></canvas>
+<canvas id="debug_canvas" width="400" height="300"></canvas>
 <script type="application/javascript">
     var canvas=document.querySelector("#canvas");
+    var debugCanvas=document.querySelector("#debug_canvas");
 
     //new simulation
     var simulation=new Simulation({ctx:canvas.getContext("2d")});
@@ -26,33 +28,47 @@
     floor.addFixtureDef({
         shape:shape
     });
-    floor.setRender(renderRectangle);
     simulation.createThing(floor);
 
+    function showId(ctx,body){
+        var userData=body.GetUserData();
+        if(userData){
+            console.log(userData.id);
+        }
+    }
 
     //box
     var box=new Thing({
         type:b2Body.b2_dynamicBody,
         position:new b2Vec2(200,0),
-        angle:Math.PI/4
+        angle:Math.PI/4,
+        userData:{
+            id:1
+        }
     });
     shape=new b2PolygonShape();
     shape.SetAsBox(10,20);
     box.addFixtureDef({shape:shape});
-    box.setRender(renderRectangle);
+    box.on("update",showId);
     simulation.createThing(box);
 
     //circle
     var circle=new Thing({
         type:b2Body.b2_dynamicBody,
-        position:new b2Vec2(300,0)
+        position:new b2Vec2(300,0),
+        userData:{
+            id:2
+        }
     });
     circle.addFixtureDef({shape:new b2CircleShape(10)});
-    circle.setRender(renderCircle);
+    circle.on("update",showId);
     simulation.createThing(circle);
 
+    //set debug
+    simulation.setDebugger(debugCanvas.getContext("2d"));
+
     //run
-    simulation.run();
+    simulation.start();
 
 </script>
 </body>
