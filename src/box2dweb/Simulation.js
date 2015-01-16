@@ -566,7 +566,7 @@ Resource.load = function (res, complete, adjust, canvasSize, targetSize, process
         this.removeEventListener("load", imgLoaded);
         index++;
         if (processing) processing(index, len);
-        console.log("img loaded");
+        //console.log("img loaded");
         if (index === len && complete) {
             if (adjust) {
                 adjustRatio();
@@ -579,7 +579,7 @@ Resource.load = function (res, complete, adjust, canvasSize, targetSize, process
         this.removeEventListener("canplay", audioLoaded);
         index++;
         if (processing) processing(index, len);
-        console.log("audio loaded");
+        //console.log("audio loaded");
         if (index === len && complete) complete(result);
     }
 

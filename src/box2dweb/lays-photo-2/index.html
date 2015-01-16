@@ -56,7 +56,7 @@
             "res/nine.png",
             "res/dot.png"//21
             ,"res/bg_end.jpg"
-        ], audioes: ["res/photo.mp3"]
+        ]//, audioes: ["res/photo.mp3"]
     }, function (result) {
         res = result;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -141,7 +141,8 @@
 
     function toGamePage() {
         simulation = new Simulation({
-            ctx: ctx
+            ctx: ctx,
+			gravity:new b2Vec2(0,50)
         });
 
         //set debug
@@ -190,7 +191,7 @@
         var isEnd = false;
 
         function end() {
-
+			simulation.pause();
             canvas.removeEventListener("mousedown", mouseDown);
 
             function calculateScore() {
@@ -208,31 +209,31 @@
             }
 
             //play audio
-            function audioEnd() {
-                simulation.pause();
-                res.audioes[0].removeEventListener("ended", audioEnd);
-                //calculate score
-                toStopPage(calculateScore());
-            }
-
-            res.audioes[0].addEventListener("ended", audioEnd);
-            res.audioes[0].load();
-            res.audioes[0].play();
+            //function audioEnd() {
+            //    simulation.pause();
+            //    res.audioes[0].removeEventListener("ended", audioEnd);
+            //    //calculate score
+            //    toStopPage(calculateScore());
+            //}
+            //
+            //res.audioes[0].addEventListener("ended", audioEnd);
+            //res.audioes[0].load();
+            //res.audioes[0].play();
             isEnd = true;
-
+			toStopPage(calculateScore());
 //        setTimeout(function(){
 //            toStopPage(calculateScore());
 //        },1000);
 //        toStopPage(calculateScore());
         }
 
-        var estep = (canvas.height / res.audioes[0].duration) * simulation.setting.step;
+        var estep = (canvas.height / 0.3) * simulation.setting.step;
         var eheight = 0;
         var direction = 1;
 
 
         function drawPhotoEffect(ctx) {
-            if (!isEnd) end();
+            //if (!isEnd) end();
 
 //        ctx.save();
 //        ctx.globalAlpha=0.5;
@@ -251,9 +252,13 @@
                 eheight -= estep
             }
 
-            if (eheight === canvas.height / 2) {
+            if (eheight >= canvas.height / 2) {
                 direction = 0;
             }
+			
+			if(eheight<=0 && direction===0 && !isEnd){
+				end();
+			}
         }
 
         //rendering
@@ -471,7 +476,7 @@
         canvas.addEventListener("mousedown", mouseDown);
 
         //run
-        simulation.run();
+        simulation.start();
     }
 </script>
 </body>
