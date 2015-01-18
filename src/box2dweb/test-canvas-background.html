@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>using canvas to make generative background</title>
+</head>
+<body>
+<canvas id="canvas" width="400" height="300" style="background:-webkit-canvas(canvas-background)"></canvas>
+<button onclick="clear()">clear</button>
+<script type="text/javascript">
+    var canvas = document.querySelector("#canvas");
+    var ctx = canvas.getContext("2d");
+    var cssCtx = document.getCSSCanvasContext("2d", "canvas-background", canvas.width, canvas.height);
+    cssCtx.fillStyle = "red";
+    cssCtx.fillRect(0, 0, 10, 10);
+    cssCtx.fillText("i am a canvas background",10,50);
+
+    function clear() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+</script>
+</body>
+</html>

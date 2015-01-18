@@ -96,59 +96,12 @@ IEvent.prototype = {
         this._events[name] = fn;
         return this;
     },
-    trigger: function (name, params) {
-        if (this._events[name]) {
-            this._events[name].apply(null, params);
+    trigger:function(name,params){
+        if(this._events[name]){
+            this._events[name].apply(null,params);
         }
-    },
-    has: function (name) {
-        if (this._events[name]) return true;
-        return false;
-    },
-    get: function (name) {
-        if (this._events[name]) return this._events[name];
-        return function () {
-        };
     }
 };
-
-function IRender() {
-    this.render = [];
-}
-IRender.prototype = {
-    addRender: function (fn, effects) {
-        if (!effects) effects = [];
-        this.render.push({
-            f: fn,
-            p: effects
-        });
-    }
-};
-IRender.render = function (h, ctx, body) {
-    var angle, pos;
-    Array.each(h, function () {
-        ctx.save();
-        //apply effect
-        Array.each(this.p, function () {
-            this.run();
-        });
-        if(body) {
-            //rotate
-            pos = body.GetPosition().Copy();
-            angle = body.GetAngle();
-            pos.Multiply(Simulation.SCALE);
-            ctx.translate(pos.x, pos.y);
-            ctx.rotate(angle);
-            ctx.translate(-pos.x, -pos.y);
-            //draw
-            this.f.apply(ctx, [pos, angle]);
-        }
-        else{
-            this.f.apply(ctx,[]);
-        }
-        ctx.restore();
-    });
-}
 
 /*
  * Simulation
@@ -160,15 +113,14 @@ function Simulation(cfg) {
     if (!cfg.gravity) cfg.gravity = new b2Vec2(0, 10);//default
     if (typeof(cfg.allowSleep) === "undefined") cfg.allowSleep = true;//default
     if (!cfg.step) cfg.step = 1 / 60;//default 60 fps
-    if (!cfg.velocityIterations) cfg.velocityIterations = 2;//default
-    if (!cfg.positionIterations) cfg.positionIterations = 1;//default
+    if (!cfg.velocityIterations) cfg.velocityIterations = 10;//default
+    if (!cfg.positionIterations) cfg.positionIterations = 8;//default
     //if(!cfg.setting.onRunning) cfg.setting.onRunning=function(){};
     this.setting = cfg;
 
     //events
     //this._events = {};
     IEvent.call(this);
-    IRender.call(this);
 
     this._timer = null;
     //this.world = new b2World(this.setting.gravity, this.setting.allowSleep);
@@ -178,7 +130,7 @@ function Simulation(cfg) {
     //contact filter
     var contactFilter = new Box2D.Dynamics.b2ContactFilter();
     contactFilter.ShouldCollide = function (fixA, fixB) {
-        if (me.has("ShouldCollide")) return me.trigger("ShouldCollide", [fixA, fixB]);
+        if (me._events["ShouldCollide"]) return me.trigger("ShouldCollide",[fixA, fixB]);
         else return true;
     };
     this.world.SetContactFilter(contactFilter);
@@ -186,7 +138,7 @@ function Simulation(cfg) {
     //contact listener
     var contactListener = new Box2D.Dynamics.b2ContactListener();
     contactListener.BeginContact = function (contact) {
-        me.trigger("BeginContact", [contact]);
+        me.trigger("BeginContact",[contact]);
         //if (me._events["BeginContact"]) return me._events["BeginContact"](contact);
     };
     this.world.SetContactListener(contactListener);
@@ -196,15 +148,11 @@ function Simulation(cfg) {
     //start time
     this.startTime = null;
 
-    this.frame=0;
-
     //debugger
     this.debugger = null;
 }
 Simulation.prototype = {
     run: function () {
-
-        this.frame++;
 
         //start time
         if (!this.startTime) {
@@ -213,7 +161,7 @@ Simulation.prototype = {
 
         //on running
         //if (this._events["running"]) this._events["running"]();
-        this.trigger("running", []);
+        this.trigger("running",[]);
 
         this.world.Step(this.setting.step, this.setting.velocityIterations, this.setting.positionIterations);
 
@@ -240,16 +188,14 @@ Simulation.prototype = {
         //debug
         //draw clear rect
         this.setting.ctx.save();
-        this.setting.ctx.globalAlpha = 0.3;
-        this.setting.ctx.strokeStyle = "red";
+        this.setting.ctx.globalAlpha=0.3;
+        this.setting.ctx.strokeStyle="red";
         this.setting.ctx.strokeRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
         this.setting.ctx.restore();
 
         //render event
         //if (this._events["rendering"]) this._events["rendering"](this.setting.ctx);
-        //this.trigger("rendering", [this.setting.ctx]);
-        IRender.render(this.render, this.setting.ctx);
-
+        this.trigger("rendering",[this.setting.ctx]);
         //render body
         var body = this.world.GetBodyList();
         var userData;
@@ -258,10 +204,8 @@ Simulation.prototype = {
             if (userData) {
                 //userData.render(this.setting.ctx, body);
                 //if(userData._events["update"]) userData._events["update"](this.setting.ctx, body);
-                userData.update(this.setting.ctx, body);
-                //userData.trigger("update",[this.setting.ctx, body]);
-                //userData.trigger("apply",[this.setting.ctx, body]);
-                //userData.trigger("render",[this.setting.ctx, body]);
+                userData.trigger("update",[this.setting.ctx, body]);
+                userData.trigger("render",[this.setting.ctx, body]);
             }
             body = body.GetNext();
         }
@@ -278,7 +222,7 @@ Simulation.prototype = {
             }
             //stop , pause event
             //if (this._events["stoped"]) this._events["stoped"](this.setting.ctx);
-            this.trigger("stoped", [this.setting.ctx]);
+            this.trigger("stoped",[this.setting.ctx]);
             return;
         }
         else {
@@ -352,21 +296,10 @@ Simulation.prototype = {
         debugDraw.SetFlags(Box2D.Dynamics.b2DebugDraw.e_shapeBit);//| Box2D.Dynamics.b2DebugDraw.e_centerOfMassBit
         debugDraw.SetDrawScale(Simulation.SCALE);
         this.world.SetDebugDraw(debugDraw);
-    },
-    setBackground:function(fn){
-        var c=this.setting.ctx.canvas;
-        c.style.background="-webkit-canvas(canvas-background)";
-        var cssCtx=document.getCSSCanvasContext("2d","canvas-background", c.width, c.height);
-        if(fn) fn.apply(cssCtx);
-    },
-    getFPS:function(){
-        var dur=this.getRunDuration()/1000;
-        return this.frame/dur;
     }
 };
 //apply IEvent.prototype
 Object.extend(Simulation.prototype, IEvent.prototype);
-Object.extend(Simulation.prototype, IRender.prototype);
 
 //default is 30
 Simulation.SCALE = 30;
@@ -442,7 +375,6 @@ function Thing(bodyDef) {
     this.fixtureDef = [];
 
     this.body = null;
-
     return this;
 }
 Thing.prototype = {
@@ -464,32 +396,8 @@ Thing.prototype = {
 
         this.fixtureDef.push(def);
     },
-    //event : "update"
-    on: function (name, fn) {
-        this.bodyDef.userData.on(name, fn);
-    },
-    addRender: function (fn, effects) {
-        effects = effects ? effects : [];
-        this.bodyDef.userData.addRender(fn, effects);
-    },
-    //Image,Canvas
-    //{width:0,height:0}
-    //{hw:0,hh:0}
-    setAsBox: function (p, def) {
-        var shape = new b2PolygonShape();
-        var hw, hh;
-        if (typeof(p.width) !== "undefined") {
-            hw = p.width / 2;
-            hh = p.height / 2;
-        }
-        else {
-            hw /= Simulation.SCALE;
-            hh /= Simulation.SCALE;
-        }
-        shape.SetAsBox(hw, hh);
-        if (!def) def = {};
-        Object.extend(def, {shape: shape});
-        this.addFixtureDef(def);
+    on:function(name,fn){
+        this.bodyDef.userData.on(name,fn);
     }
 };
 Thing.newBodyDef = function () {
@@ -505,35 +413,35 @@ Thing.newFixtureDef = function () {
     def.userData = new FixtureUserData();
     return def;
 };
-//
-//function ImageThing(bodyDef,image){
-//    Thing.call(this,bodyDef);
-//    if(!image) throw "image is not defined";
-//    this.on("render",this.render.bind(this));
-//    this.image=image;
-//    this.hw=image.width/2;
-//    this.hh=image.height/2;
-//}
-//ImageThing.prototype=new Thing({});
-//ImageThing.prototype.render=function(ctx,body){
-//    var pos = body.GetPosition().Copy();
-//    pos.Multiply(Simulation.SCALE);
-//    var angle=body.GetAngle();
-//
-//    ctx.save();
-//    ctx.translate(pos.x,pos.y);
-//    ctx.rotate(angle);
-//    ctx.translate(-pos.x,-pos.y);
-//    ctx.drawImage(this.image,pos.x-this.hw,pos.y-this.hh);
-//    ctx.restore();
-//};
-//ImageThing.prototype.setDefaultBox=function(def){
-//    var shape=new b2PolygonShape();
-//    shape.SetAsBox(this.hw,this.hh);
-//    if(def)def=Object.extend({shape:shape},def);
-//    else def={shape:shape};
-//    this.addFixtureDef(def);
-//};
+
+function ImageThing(bodyDef,image){
+    Thing.call(this,bodyDef);
+    if(!image) throw "image is not defined";
+    this.on("render",this.render.bind(this));
+    this.image=image;
+    this.hw=image.width/2;
+    this.hh=image.height/2;
+}
+ImageThing.prototype=new Thing({});
+ImageThing.prototype.render=function(ctx,body){
+    var pos = body.GetPosition().Copy();
+    pos.Multiply(Simulation.SCALE);
+    var angle=body.GetAngle();
+
+    ctx.save();
+    ctx.translate(pos.x,pos.y);
+    ctx.rotate(angle);
+    ctx.translate(-pos.x,-pos.y);
+    ctx.drawImage(this.image,pos.x-this.hw,pos.y-this.hh);
+    ctx.restore();
+};
+ImageThing.prototype.setDefaultBox=function(def){
+    var shape=new b2PolygonShape();
+    shape.SetAsBox(this.hw,this.hh);
+    if(def)def=Object.extend({shape:shape},def);
+    else def={shape:shape};
+    this.addFixtureDef(def);
+};
 
 //Input
 function Input() {
@@ -566,94 +474,23 @@ Input.d = 68;
 Input.j = 74;
 Input.k = 75;
 
-//effect class
-function Effect(ctx) {
-    this.ctx = ctx;
-}
-Effect.prototype = {
-    run: function () {
-    }
-};
-
-//flicker effect
-function FlickerEffect(ctx, step) {
-    Effect.call(this, ctx);
-    this.startTime = 0;
-    this.flag = 1;
-    this.alpha = 1;
-    this.step = step;
-}
-FlickerEffect.prototype = new Effect({});
-FlickerEffect.prototype.run = function () {
-    this.ctx.globalAlpha = this.alpha;
-
-    if (this.flag === 1) {
-        this.alpha -= this.step;
-    }
-    else {
-        this.alpha += this.step;
-    }
-    if (this.alpha <= 0) {
-        this.alpha = 0;
-        this.flag = 0;
-    }
-    if (this.alpha >= 1) {
-        this.alpha = 1;
-        this.flag = 1;
-    }
-};
-
 //UserData
 function UserData() {
 }
 UserData.prototype = {};
 //body user data
-//events:update,render,apply
+//events:update
 function BodyUserData() {
     UserData.call(this);
     IEvent.call(this);
-    IRender.call(this);
     //if true then destroy the body
     this.destroy = false;
-
-    //effect
-    //this.effect=[];
-    //render
-    //this.render = [];
 }
 BodyUserData.prototype = new UserData();
 Object.extend(BodyUserData.prototype, IEvent.prototype);
-Object.extend(BodyUserData.prototype, IRender.prototype);
-//BodyUserData.prototype.addEffect=function(e){
-//    this.effect.push(e);
+//BodyUserData.prototype.render = function (ctx, body) {
+////    console.log("render body");
 //};
-/*
- * render{Function}
- * effects{Array{Effect}}
- * */
-//BodyUserData.prototype.addRender = function (render, effects) {
-//    this.render.push({
-//        f: render,
-//        p: effects
-//    });
-//};
-BodyUserData.prototype.update = function (ctx, body) {
-    var me = this;
-    //update
-    this.trigger("update", [ctx, body]);
-    //effect
-    //if(this.effect.length>0){
-    //    Array.each(this.effect,function(){
-    //        this.run(me.get("render"),[ctx,body]);
-    //    });
-    //}
-    //else{
-    //    this.trigger("render",[ctx,body]);
-    //}
-    //render
-    //utility.render(this.render,ctx,body);
-    IRender.render(this.render, ctx, body);
-};
 
 //fixture user data
 //if the fixture have same layer and same type then do collision

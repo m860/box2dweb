@@ -17,28 +17,16 @@
 
     function resourceReady(res){
         res=res;
-        simulation=new Simulation({ctx:canvas.getContext("2d")});
-
-        //create floor
-        var floor=new Thing({
-            type:b2Body.b2_staticBody,
-            position:new b2Vec2(200,275)
+        simulation=new Simulation({
+            ctx:canvas.getContext("2d"),
+            step:1/30
         });
-        var shape=new b2PolygonShape();
-        shape.SetAsBox(200,5);
-        floor.addFixtureDef({
-            shape:shape
-        });
-        simulation.createThing(floor);
 
-        //box
-        var box=new ImageThing({
-            type:b2Body.b2_dynamicBody,
-            position:new b2Vec2(200,0),
-            angle:Math.PI/4
-        },res.images[0]);
-        box.setDefaultBox();
-        simulation.createThing(box);
+        //set background
+        simulation.setBackground(function(){
+            this.drawImage(res.images[0],0,0);
+            this.drawImage(res.images[1],0,0);
+        });
 
         //set debug
         simulation.setDebugger(debugCanvas.getContext("2d"));
@@ -48,7 +36,7 @@
     }
 
     Resource.load({
-        images:["lays-photo-2/res/one.png"]
+        images:["lays-photo-2/res/10.jpg","lays-photo-2/res/11.jpg"]
     },resourceReady);
 
 </script>
