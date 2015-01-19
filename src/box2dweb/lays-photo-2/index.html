@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content=" user-scalable = no"/>
+    <meta name="viewport" content=" user-scalable = no"/>
     <title></title>
     <style type="text/css">
         * {
@@ -13,8 +13,8 @@
             overflow: hidden;
         }
     </style>
-	
-	<!--<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>-->
+
+    <!--<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>-->
     <script type="text/javascript" src="Box2dWeb-2.1.a.3.min.js"></script>
     <script type="text/javascript" src="../Simulation.js"></script>
 </head>
@@ -54,7 +54,8 @@
             "res/eight.png",
             "res/nine.png",
             "res/dot.png"//21
-            ,"res/bg_end.jpg"
+            , "res/bg_end.jpg"
+            , "res/success.png"
         ]
     }, function (result) {
         res = result;
@@ -99,15 +100,15 @@
 
         canvas.addEventListener("click", canvasClick);
 
-		//set background
-		simulation.setBackground(function(){
-			this.drawImage(res.images[0], 0, 0);
-		});
-		
-		//flick
-		simulation.addRender(function(){
-			this.drawImage(res.images[1], 180 * Resource.scale.x, 600 * Resource.scale.y);
-		},[new FlickerEffect(ctx,simulation.setting.step)]);
+        //set background
+        simulation.setBackground(function () {
+            this.drawImage(res.images[0], 0, 0);
+        });
+
+        //flick
+        simulation.addRender(function () {
+            this.drawImage(res.images[1], 180 * Resource.scale.x, 600 * Resource.scale.y);
+        }, [new FlickerEffect(ctx, simulation.setting.step)]);
 
         //run
         simulation.start();
@@ -121,7 +122,7 @@
     function toGamePage() {
         simulation = new Simulation({
             ctx: ctx,
-			gravity:new b2Vec2(0,Number.random(40,50))
+            gravity: new b2Vec2(0, Number.random(40, 50))
         });
 
         //button body
@@ -167,36 +168,36 @@
         var isEnd = false;
 
         function end() {
-			simulation.pause();
+            simulation.pause();
             canvas.removeEventListener("mousedown", mouseDown);
 
             function calculateScore() {
                 //calculate score
-                var score=0;
-                var p1=photo.body.GetPosition().Copy();
+                var score = 0;
+                var p1 = photo.body.GetPosition().Copy();
                 p1.Multiply(Simulation.SCALE);
-                var p2=framePos.Copy();
-                p2.x+=res.images[3].width/2;
-				p2.y+=res.images[3].height/2;
-                var disVec=new b2Vec2(p1.x-p2.x,p1.y-p2.y);
-                var dis=disVec.Length();
-				if(dis<=1){
-					score=100;
-				}
-				else {
-					score=(res.images[3].height*0.5-dis)*(100/(res.images[3].height*0.5));
-				}
-				if(score<=0) score=0;
+                var p2 = framePos.Copy();
+                p2.x += res.images[3].width / 2;
+                p2.y += res.images[3].height / 2;
+                var disVec = new b2Vec2(p1.x - p2.x, p1.y - p2.y);
+                var dis = disVec.Length();
+                if (dis <= 1) {
+                    score = 100;
+                }
+                else {
+                    score = (res.images[3].height * 0.5 - dis) * (100 / (res.images[3].height * 0.5));
+                }
+                if (score <= 0) score = 0;
 
-				if(score==100) return score;
+                if (score == 100) return score;
                 return score.toFixed(2);
             }
 
             isEnd = true;
-			setTimeout(function(){
+            setTimeout(function () {
 				toStopPage(calculateScore());
-			},1000);
-			
+            }, 1000);
+
         }
 
         var estep = (canvas.height / 0.2) * simulation.setting.step;
@@ -205,9 +206,9 @@
 
 
         function drawPhotoEffect(ctx) {
-			if(eheight<=0 && direction===0 && !isEnd){
-				end();
-			}
+            if (eheight <= 0 && direction === 0 && !isEnd) {
+                end();
+            }
             //if (!isEnd) end();
 
 //        ctx.save();
@@ -230,17 +231,17 @@
             if (eheight >= canvas.height / 2) {
                 direction = 0;
             }
-			
-			
-        }
-		
-		simulation.setBackground(function(){
-			this.drawImage(res.images[9], 0, 0);
-			this.drawImage(res.images[10], buttonPos.x, buttonPos.y);
-		});
 
-		simulation.addRender(function(){
-			//draw photo
+
+        }
+
+        simulation.setBackground(function () {
+            this.drawImage(res.images[9], 0, 0);
+            this.drawImage(res.images[10], buttonPos.x, buttonPos.y);
+        });
+
+        simulation.addRender(function () {
+            //draw photo
             var photoPos;
             photoPos = photo.body.GetPosition().Copy();
             photoPos.Multiply(Simulation.SCALE);
@@ -249,24 +250,23 @@
             ctx.rotate(photo.body.GetAngle());
             ctx.translate(-photoPos.x, -photoPos.y);
             ctx.drawImage(res.images[2], photoPos.x - res.images[2].width / 2, photoPos.y - res.images[2].height / 2);
-            
-			//ctx.beginPath();
-			//ctx.arc(photoPos.x,photoPos.y,10,0,Math.PI*2);
-			//ctx.closePath();
-			//ctx.fill();
-			
-			ctx.restore();
-			
-			
-			
-			//draw mask
+
+            //ctx.beginPath();
+            //ctx.arc(photoPos.x,photoPos.y,10,0,Math.PI*2);
+            //ctx.closePath();
+            //ctx.fill();
+
+            ctx.restore();
+
+
+            //draw mask
             ctx.save();
             ctx.globalAlpha = 0.5;
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height - res.images[10].height);
             ctx.restore();
-			
-			//draw mask photo
+
+            //draw mask photo
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(framePos.x, framePos.y);
@@ -279,26 +279,26 @@
             ctx.rotate(photo.body.GetAngle());
             ctx.translate(-photoPos.x, -photoPos.y);
             ctx.drawImage(res.images[2], photoPos.x - res.images[2].width / 2, photoPos.y - res.images[2].height / 2);
-			
-			//ctx.beginPath();
-			//ctx.arc(photoPos.x,photoPos.y,10,0,Math.PI*2);
-			//ctx.closePath();
-			//ctx.fill();
-			
+
+            //ctx.beginPath();
+            //ctx.arc(photoPos.x,photoPos.y,10,0,Math.PI*2);
+            //ctx.closePath();
+            //ctx.fill();
+
             ctx.restore();
-			
-			//draw frame
+
+            //draw frame
             ctx.drawImage(res.images[3], framePos.x, framePos.y);
-			//ctx.beginPath();
-			//ctx.arc(framePos.x,framePos.y,10,0,Math.PI*2);
-			//ctx.closePath();
-			//ctx.fill();
+            //ctx.beginPath();
+            //ctx.arc(framePos.x,framePos.y,10,0,Math.PI*2);
+            //ctx.closePath();
+            //ctx.fill();
 
             if (photo.body.GetType() === b2Body.b2_staticBody) {
                 drawPhotoEffect(ctx);
             }
-		});
-		
+        });
+
         //
         simulation.on("BeginContact", function (contact) {
             var ba = contact.GetFixtureA().GetBody();
@@ -351,7 +351,7 @@
         var shareButton = new Thing({
             type: b2Body.b2_staticBody,
             position: new b2Vec2(canvas.width / 2,
-                    score >= 100 ? ((524 + res.images[5].height / 2)*Resource.scale.y) : ((524 + res.images[8].height / 2)*Resource.scale.y))
+                    score >= 100 ? ((524 + res.images[5].height / 2) * Resource.scale.y) : ((524 + res.images[8].height / 2) * Resource.scale.y))
         });
         shape = new b2PolygonShape();
         if (score >= 100) {
@@ -371,7 +371,7 @@
         //again button
         var againButton = new Thing({
             type: b2Body.b2_staticBody,
-            position: new b2Vec2(canvas.width / 2, (608 + res.images[6].height / 2)*Resource.scale.y)
+            position: new b2Vec2(canvas.width / 2, (608 + res.images[6].height / 2) * Resource.scale.y)
         });
         shape = new b2PolygonShape();
         shape.SetAsBox(res.images[6].width / 2, res.images[6].height / 2);
@@ -384,7 +384,7 @@
         //buy button
         var buyButton = new Thing({
             type: b2Body.b2_staticBody,
-            position: new b2Vec2(canvas.width / 2, (440 + res.images[7].height / 2)*Resource.scale.y)
+            position: new b2Vec2(canvas.width / 2, (440 + res.images[7].height / 2) * Resource.scale.y)
         });
         shape = new b2PolygonShape();
         shape.SetAsBox(res.images[7].width / 2, res.images[7].height / 2);
@@ -395,8 +395,8 @@
 
         simulation.createThing(buyButton);
 
-		simulation.setBackground(function(){
-			//draw background
+        simulation.setBackground(function () {
+            //draw background
             this.drawImage(res.images[22], 0, 0);
             //draw title
             drawScore(this, score);
@@ -404,26 +404,30 @@
             var pos;
 
             //draw buy button
-            pos=buyButton.body.GetPosition().Copy();
+            pos = buyButton.body.GetPosition().Copy();
             pos.Multiply(Simulation.SCALE);
             if (score < 100) {
-                this.drawImage(res.images[7], pos.x-(res.images[7].width/2), pos.y-(res.images[7].height/2));
+                this.drawImage(res.images[7], pos.x - (res.images[7].width / 2), pos.y - (res.images[7].height / 2));
+            }
+            else{
+                this.drawImage(res.images[23], pos.x - (res.images[23].width / 2), pos.y - (res.images[23].height / 2));
             }
 //        draw share button
-            pos=shareButton.body.GetPosition().Copy();
+            pos = shareButton.body.GetPosition().Copy();
             pos.Multiply(Simulation.SCALE);
             if (score >= 100) {
-                this.drawImage(res.images[5], pos.x-(res.images[5].width/2), pos.y-(res.images[5].height/2));
+                this.drawImage(res.images[5], pos.x - (res.images[5].width / 2), pos.y - (res.images[5].height / 2));
+
             }
             else {
-                this.drawImage(res.images[8], pos.x-(res.images[8].width/2), pos.y-(res.images[8].height/2));
+                this.drawImage(res.images[8], pos.x - (res.images[8].width / 2), pos.y - (res.images[8].height / 2));
             }
             //draw again button
-            pos=againButton.body.GetPosition().Copy();
+            pos = againButton.body.GetPosition().Copy();
             pos.Multiply(Simulation.SCALE);
-            this.drawImage(res.images[6], pos.x-(res.images[6].width/2), pos.y-(res.images[6].height/2));
-		});
-		
+            this.drawImage(res.images[6], pos.x - (res.images[6].width / 2), pos.y - (res.images[6].height / 2));
+        });
+
         function mouseDown(evt) {
             mouseX = evt.clientX;
             mouseY = evt.clientY;

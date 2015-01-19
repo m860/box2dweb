@@ -130,7 +130,7 @@ function Simulation(cfg) {
     this.startTime = null;
 
     //debugger
-    this.debugger = null;
+    this.dctx = null;
 }
 Simulation.prototype = {
     run: function () {
@@ -163,7 +163,7 @@ Simulation.prototype = {
 //        this.setting.ctx.strokeRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
 //        this.setting.ctx.restore();
 
-        if (this.debugger) {
+        if (this.dctx) {
             this.world.DrawDebugData();
         }
         //render event
@@ -241,7 +241,7 @@ Simulation.prototype = {
         return Date.now() - this.startTime;
     },
     setDebugger: function (ctx) {
-        this.debugger = ctx;
+        this.dctx = ctx;
 
         //debug draw
         var debugDraw = new Box2D.Dynamics.b2DebugDraw();

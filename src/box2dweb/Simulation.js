@@ -218,8 +218,8 @@ function Simulation(cfg) {
 
     this.frame=0;
 
-    //debugger
-    this.debugger = null;
+    //dctx
+    this.dctx = null;
 }
 Simulation.prototype = {
     run: function () {
@@ -250,21 +250,21 @@ Simulation.prototype = {
         this.setting.ctx.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
 
         //debug render
-        if (this.debugger) {
-            this.debugger.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
+        if (this.dctx) {
+            this.dctx.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
             this.world.DrawDebugData();
             //draw title
-            this.debugger.fillText("Debugger", 0, 10);
+            this.dctx.fillText("Debugger", 0, 10);
         }
 
 
         //debug
         //draw clear rect
-        this.setting.ctx.save();
-        this.setting.ctx.globalAlpha = 0.3;
-        this.setting.ctx.strokeStyle = "red";
-        this.setting.ctx.strokeRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
-        this.setting.ctx.restore();
+        //this.setting.ctx.save();
+        //this.setting.ctx.globalAlpha = 0.3;
+        //this.setting.ctx.strokeStyle = "red";
+        //this.setting.ctx.strokeRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
+        //this.setting.ctx.restore();
 
         //render event
         //if (this._events["rendering"]) this._events["rendering"](this.setting.ctx);
@@ -286,6 +286,7 @@ Simulation.prototype = {
             }
             body = body.GetNext();
         }
+
 
         //clear all force
         this.world.ClearForces();
@@ -365,7 +366,7 @@ Simulation.prototype = {
         return body;
     },
     setDebugger: function (debuggerCtx) {
-        this.debugger = debuggerCtx;
+        this.dctx = debuggerCtx;
         //debug draw
         var debugDraw = new Box2D.Dynamics.b2DebugDraw();
         debugDraw.SetSprite(debuggerCtx);

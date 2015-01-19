@@ -149,7 +149,7 @@ function Simulation(cfg) {
     this.startTime = null;
 
     //debugger
-    this.debugger = null;
+    this.dctx = null;
 }
 Simulation.prototype = {
     run: function () {
@@ -177,11 +177,11 @@ Simulation.prototype = {
         this.setting.ctx.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
 
         //debug render
-        if (this.debugger) {
-            this.debugger.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
+        if (this.dctx) {
+            this.dctx.clearRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
             this.world.DrawDebugData();
             //draw title
-            this.debugger.fillText("Debugger", 0, 10);
+            this.dctx.fillText("Debugger", 0, 10);
         }
 
 
@@ -288,7 +288,7 @@ Simulation.prototype = {
         return body;
     },
     setDebugger: function (debuggerCtx) {
-        this.debugger = debuggerCtx;
+        this.dctx = debuggerCtx;
         //debug draw
         var debugDraw = new Box2D.Dynamics.b2DebugDraw();
         debugDraw.SetSprite(debuggerCtx);
