@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content=" user-scalable = no"/>
     <title></title>
     <style type="text/css">
         * {
@@ -12,20 +13,18 @@
             overflow: hidden;
         }
     </style>
+	
+	<!--<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>-->
     <script type="text/javascript" src="Box2dWeb-2.1.a.3.min.js"></script>
-    <script type="text/javascript" src="Simulation.min.js"></script>
+    <script type="text/javascript" src="../Simulation.js"></script>
 </head>
 <body>
 <canvas id="canvas" width="480" height="800"></canvas>
-<!--<canvas id="canvas" width="360" height="600"></canvas>-->
-<!--<canvas id="debug_canvas" width="360" height="600"></canvas>-->
 <script type="text/javascript">
     var canvas = document.querySelector("#canvas")
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     var ctx = canvas.getContext("2d");
-//    var debugCanvas = document.querySelector("#debug_canvas");
-//    var debugCtx = debugCanvas.getContext("2d");
 
     var simulation;
     var res;
@@ -56,15 +55,12 @@
             "res/nine.png",
             "res/dot.png"//21
             ,"res/bg_end.jpg"
-        ]//, audioes: ["res/photo.mp3"]
+        ]
     }, function (result) {
         res = result;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         toReadyPage();
     }, true, {width: canvas.width, height: canvas.height}, {width: 480, height: 800}, function (index, length) {
-        //ctx.clearRect(0, 0, canvas.width, canvas.height);
-        //ctx.drawImage(res.images[22],0,0);
-        //ctx.fillText(index / length, 0, 10);
     });
 
 
@@ -95,7 +91,7 @@
         function canvasClick() {
             canvas.removeEventListener("click", canvasClick);
 
-            simulation.pause();
+            simulation.stop();
 
             //to description page
             toDescriptionPage();
@@ -103,35 +99,18 @@
 
         canvas.addEventListener("click", canvasClick);
 
-        var alpha = 0;
-        var direction = 1;
-
-        simulation.on("rendering", function (ctx) {
-
-            //draw background
-            ctx.drawImage(res.images[0], 0, 0);
-
-            //draw start button
-            ctx.save();
-            ctx.globalAlpha = alpha;
-            ctx.drawImage(res.images[1], 180 * Resource.scale.x, 600 * Resource.scale.y);
-            ctx.restore();
-            if (alpha <= 0) direction = 1;
-            if (alpha >= 1) direction = 0
-            if (direction === 1) {
-                alpha += simulation.setting.step;
-                alpha = alpha > 1 ? 1 : alpha;
-            }
-            else {
-                alpha -= simulation.setting.step;
-                alpha = alpha < 0 ? 0 : alpha;
-            }
-
-
-        });
+		//set background
+		simulation.setBackground(function(){
+			this.drawImage(res.images[0], 0, 0);
+		});
+		
+		//flick
+		simulation.addRender(function(){
+			this.drawImage(res.images[1], 180 * Resource.scale.x, 600 * Resource.scale.y);
+		},[new FlickerEffect(ctx,simulation.setting.step)]);
 
         //run
-        simulation.run();
+        simulation.start();
     }
 
     function toDescriptionPage() {
@@ -142,11 +121,8 @@
     function toGamePage() {
         simulation = new Simulation({
             ctx: ctx,
-			gravity:new b2Vec2(0,50)
+			gravity:new b2Vec2(0,Number.random(40,50))
         });
-
-        //set debug
-//    simulation.setDebugger(debugCtx);
 
         //button body
         var button = new Thing({
@@ -201,38 +177,37 @@
                 p1.Multiply(Simulation.SCALE);
                 var p2=framePos.Copy();
                 p2.x+=res.images[3].width/2;
+				p2.y+=res.images[3].height/2;
                 var disVec=new b2Vec2(p1.x-p2.x,p1.y-p2.y);
                 var dis=disVec.Length();
-                score=(10000-dis*10)/100;
+				if(dis<=1){
+					score=100;
+				}
+				else {
+					score=(res.images[3].height*0.5-dis)*(100/(res.images[3].height*0.5));
+				}
+				if(score<=0) score=0;
 
+				if(score==100) return score;
                 return score.toFixed(2);
             }
 
-            //play audio
-            //function audioEnd() {
-            //    simulation.pause();
-            //    res.audioes[0].removeEventListener("ended", audioEnd);
-            //    //calculate score
-            //    toStopPage(calculateScore());
-            //}
-            //
-            //res.audioes[0].addEventListener("ended", audioEnd);
-            //res.audioes[0].load();
-            //res.audioes[0].play();
             isEnd = true;
-			toStopPage(calculateScore());
-//        setTimeout(function(){
-//            toStopPage(calculateScore());
-//        },1000);
-//        toStopPage(calculateScore());
+			setTimeout(function(){
+				toStopPage(calculateScore());
+			},1000);
+			
         }
 
-        var estep = (canvas.height / 0.3) * simulation.setting.step;
+        var estep = (canvas.height / 0.2) * simulation.setting.step;
         var eheight = 0;
         var direction = 1;
 
 
         function drawPhotoEffect(ctx) {
+			if(eheight<=0 && direction===0 && !isEnd){
+				end();
+			}
             //if (!isEnd) end();
 
 //        ctx.save();
@@ -256,20 +231,16 @@
                 direction = 0;
             }
 			
-			if(eheight<=0 && direction===0 && !isEnd){
-				end();
-			}
+			
         }
+		
+		simulation.setBackground(function(){
+			this.drawImage(res.images[9], 0, 0);
+			this.drawImage(res.images[10], buttonPos.x, buttonPos.y);
+		});
 
-        //rendering
-        simulation.on("rendering", function (ctx) {
-            //draw background
-            ctx.drawImage(res.images[9], 0, 0);
-
-            //draw photo button
-            ctx.drawImage(res.images[10], buttonPos.x, buttonPos.y);
-
-            //draw photo
+		simulation.addRender(function(){
+			//draw photo
             var photoPos;
             photoPos = photo.body.GetPosition().Copy();
             photoPos.Multiply(Simulation.SCALE);
@@ -278,16 +249,24 @@
             ctx.rotate(photo.body.GetAngle());
             ctx.translate(-photoPos.x, -photoPos.y);
             ctx.drawImage(res.images[2], photoPos.x - res.images[2].width / 2, photoPos.y - res.images[2].height / 2);
-            ctx.restore();
-
-            //draw mask
+            
+			//ctx.beginPath();
+			//ctx.arc(photoPos.x,photoPos.y,10,0,Math.PI*2);
+			//ctx.closePath();
+			//ctx.fill();
+			
+			ctx.restore();
+			
+			
+			
+			//draw mask
             ctx.save();
             ctx.globalAlpha = 0.5;
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height - res.images[10].height);
             ctx.restore();
-
-            //draw mask photo
+			
+			//draw mask photo
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(framePos.x, framePos.y);
@@ -300,18 +279,28 @@
             ctx.rotate(photo.body.GetAngle());
             ctx.translate(-photoPos.x, -photoPos.y);
             ctx.drawImage(res.images[2], photoPos.x - res.images[2].width / 2, photoPos.y - res.images[2].height / 2);
+			
+			//ctx.beginPath();
+			//ctx.arc(photoPos.x,photoPos.y,10,0,Math.PI*2);
+			//ctx.closePath();
+			//ctx.fill();
+			
             ctx.restore();
-
-            //draw frame
+			
+			//draw frame
             ctx.drawImage(res.images[3], framePos.x, framePos.y);
+			//ctx.beginPath();
+			//ctx.arc(framePos.x,framePos.y,10,0,Math.PI*2);
+			//ctx.closePath();
+			//ctx.fill();
 
-//        if (photo.body != null && photo.body.GetUserData().destroy) {
-//            end();
-//        }
             if (photo.body.GetType() === b2Body.b2_staticBody) {
                 drawPhotoEffect(ctx);
             }
-        }).on("BeginContact", function (contact) {
+		});
+		
+        //
+        simulation.on("BeginContact", function (contact) {
             var ba = contact.GetFixtureA().GetBody();
             var bb = contact.GetFixtureB().GetBody();
             var ua = ba.GetUserData();
@@ -347,7 +336,7 @@
         canvas.addEventListener("mousedown", mouseDown);
 
         //run
-        simulation.run();
+        simulation.start();
     }
 
     function toStopPage(score) {
@@ -406,15 +395,11 @@
 
         simulation.createThing(buyButton);
 
-        //rendering
-        simulation.on("rendering", function (ctx) {
-            //draw background
-            ctx.drawImage(res.images[22], 0, 0);
+		simulation.setBackground(function(){
+			//draw background
+            this.drawImage(res.images[22], 0, 0);
             //draw title
-//            ctx.drawImage(res.images[4], (canvas.width - res.images[4].width) / 2, 100 * Resource.scale.y);
-//            ctx.strokeRect((canvas.width - res.images[4].width) / 2, 100* Resource.scale.y, res.images[4].width, res.images[4].height);
-            //TODO draw scroe
-            drawScore(ctx, score);
+            drawScore(this, score);
 
             var pos;
 
@@ -422,27 +407,23 @@
             pos=buyButton.body.GetPosition().Copy();
             pos.Multiply(Simulation.SCALE);
             if (score < 100) {
-                //ctx.drawImage(res.images[7], (canvas.width - res.images[7].width) / 2, 440* Resource.scale.y);
-                ctx.drawImage(res.images[7], pos.x-(res.images[7].width/2), pos.y-(res.images[7].height/2));
+                this.drawImage(res.images[7], pos.x-(res.images[7].width/2), pos.y-(res.images[7].height/2));
             }
 //        draw share button
             pos=shareButton.body.GetPosition().Copy();
             pos.Multiply(Simulation.SCALE);
             if (score >= 100) {
-                //ctx.drawImage(res.images[5], (canvas.width - res.images[5].width) / 2, 524* Resource.scale.y);
-                ctx.drawImage(res.images[5], pos.x-(res.images[5].width/2), pos.y-(res.images[5].height/2));
+                this.drawImage(res.images[5], pos.x-(res.images[5].width/2), pos.y-(res.images[5].height/2));
             }
             else {
-                //ctx.drawImage(res.images[8], (canvas.width - res.images[8].width) / 2, 524* Resource.scale.y);
-                ctx.drawImage(res.images[8], pos.x-(res.images[8].width/2), pos.y-(res.images[8].height/2));
+                this.drawImage(res.images[8], pos.x-(res.images[8].width/2), pos.y-(res.images[8].height/2));
             }
             //draw again button
             pos=againButton.body.GetPosition().Copy();
             pos.Multiply(Simulation.SCALE);
-            //ctx.drawImage(res.images[6], (canvas.width - res.images[6].width) / 2, 608* Resource.scale.y);
-            ctx.drawImage(res.images[6], pos.x-(res.images[6].width/2), pos.y-(res.images[6].height/2));
-        });
-
+            this.drawImage(res.images[6], pos.x-(res.images[6].width/2), pos.y-(res.images[6].height/2));
+		});
+		
         function mouseDown(evt) {
             mouseX = evt.clientX;
             mouseY = evt.clientY;
@@ -467,7 +448,7 @@
                         alert("share fail");
                     }
                     else if (id === "buy") {
-                        window.location.href = "http://detail.tmall.com/item.htm?spm=a220m.1000858.1000725.11.YV0VTk&id=42218249545&skuId=70330181835&areaId=110100&cat_id=53628004&rn=5842cf32982713c8fc0bedd9a6e57322&user_id=1705228750&is_b=1";
+                        window.location.href = "http://auction1.paipai.com/1E31028700000000040100003740F540?ptag=40042.14.12?qq-pf-to=pcqq.c2c";
                     }
                 }
             }
