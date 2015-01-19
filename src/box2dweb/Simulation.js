@@ -90,6 +90,7 @@ window["b2Math"] = Box2D.Common.Math.b2Math;
 //event interface
 function IEvent() {
     this._events = {};
+    this._eachEvts=[];
 }
 IEvent.prototype = {
     on: function (name, fn) {
@@ -109,6 +110,25 @@ IEvent.prototype = {
         if (this._events[name]) return this._events[name];
         return function () {
         };
+    },
+    each:function(ms,fn,params){
+        if(!params) params=[];
+        //var name=String.format("each_{0}",ms);
+        this._eachEvts.push({
+            dur:ms,
+            start:0,
+            fn:fn,
+            arg:params
+        });
+    },
+    triggerEach:function(){
+        Array.each(this._eachEvts,function(){
+            var escape=Date.now()-this.start;
+            if(escape>=this.dur){
+                this.fn.apply(escape,this.arg);
+                this.start=Date.now();
+            }
+        });
     }
 };
 
@@ -214,6 +234,7 @@ Simulation.prototype = {
         //on running
         //if (this._events["running"]) this._events["running"]();
         this.trigger("running", []);
+        this.triggerEach();
 
         this.world.Step(this.setting.step, this.setting.velocityIterations, this.setting.positionIterations);
 
@@ -468,6 +489,9 @@ Thing.prototype = {
     on: function (name, fn) {
         this.bodyDef.userData.on(name, fn);
     },
+    each:function(ms,fn,params){
+        this.bodyDef.userData.each(ms,fn,params);
+    },
     addRender: function (fn, effects) {
         effects = effects ? effects : [];
         this.bodyDef.userData.addRender(fn, effects);
@@ -641,6 +665,7 @@ BodyUserData.prototype.update = function (ctx, body) {
     var me = this;
     //update
     this.trigger("update", [ctx, body]);
+    this.triggerEach();
     //effect
     //if(this.effect.length>0){
     //    Array.each(this.effect,function(){

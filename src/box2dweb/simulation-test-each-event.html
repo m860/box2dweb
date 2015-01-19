@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
+    <script type="text/javascript" src="Simulation.js"></script>
+</head>
+<body>
+<canvas id="canvas" width="400" height="300"></canvas>
+<canvas id="debug_canvas" width="400" height="300"></canvas>
+<script type="application/javascript">
+    var canvas=document.querySelector("#canvas");
+    var debugCanvas=document.querySelector("#debug_canvas");
+
+    var simulation,res;
+
+    function resourceReady(res){
+        res=res;
+        simulation=new Simulation({
+            ctx:canvas.getContext("2d"),
+            step:1/60
+        });
+
+        //create floor
+        var floor=new Thing({
+            type:b2Body.b2_staticBody,
+            position:new b2Vec2(200,275)
+        });
+        var shape=new b2PolygonShape();
+        shape.SetAsBox(200,5);
+        floor.addFixtureDef({
+            shape:shape
+        });
+        simulation.createThing(floor);
+
+        //box
+        var box=new Thing({
+            type:b2Body.b2_dynamicBody,
+            position:new b2Vec2(200,0),
+            angle:Math.PI/4
+        },res.images[0]);
+        box.setAsBox(res.images[0]);
+        var body5=0;
+        var bodyEscape;
+        box.each(5000,function(){
+            body5++;
+            bodyEscape=this;
+        });
+        box.addRender(function(pos,angle){
+            this.drawImage(res.images[0],pos.x-res.images[0].width/2,pos.y-res.images[0].height/2);
+
+        });
+
+        simulation.createThing(box);
+
+        //set debug
+        simulation.setDebugger(debugCanvas.getContext("2d"));
+
+        var each4=0;
+        var escape;
+        simulation.each(4000,function(){
+            each4++;
+            escape=this;
+        });
+
+        //global render
+        simulation.addRender(function(){
+            this.fillText(String.format("global run each 4 seconds : {0} , escape : {1}",each4,escape),0,20);
+            this.fillText(String.format("body run each 5 seconds : {0} , escape : {1}",body5,bodyEscape),0,40);
+        });
+
+        //global render with flicker
+//        var flickerEffect=new FlickerEffect(simulation.setting.ctx,(1/0.3)*simulation.setting.step);
+//        simulation.addRender(function(){
+//            this.fillText("render with flicker effect",0,40);
+//        },[flickerEffect]);
+
+        //fps
+        simulation.addRender(function(){
+            this.fillText(String.format("FPS:{0}",simulation.getFPS()),0,60);
+        });
+
+        //run
+        simulation.start();
+    }
+
+    Resource.load({
+        images:["lays-photo-2/res/one.png"]
+    },resourceReady);
+
+</script>
+</body>
+</html>

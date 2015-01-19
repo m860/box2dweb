@@ -1,17 +1,8 @@
-//var canvas = document.createElement("canvas");
-var canvas = document.querySelector("#canvas2");
-//canvas.width = 480;//window.innerWidth;
-//canvas.height = 800;//window.innerHeight;
-//document.body.appendChild(canvas);
-
-//var scaleX = canvas.width / 480;
-//var scaleY = canvas.height / 800;
+var canvas = document.querySelector("#canvas");
+var debugCanvas = document.querySelector("#canvas2");
 
 var ctx = canvas.getContext("2d");
-//ctx.scale(scaleX,scaleY);
-
-var hw = (window.innerWidth / 2);
-var hh = (window.innerHeight / 2);
+var debugCtx=debugCanvas.getContext("2d");
 
 //new simulation
 var simulation;
@@ -19,15 +10,6 @@ var simulation;
 var img;
 var res;
 
-//function getPhoneGapPath() {
-//
-//    var path = window.location.pathname;
-//    path = path.substr( path, path.length - 10 );
-//    return 'file://' + path;
-//
-//}
-//alert(String.format("phone gap path : {0}",getPhoneGapPath()));
-//var audioSrc=getPhoneGapPath() + 'photo.ogg';
 
 Resource.load({
     images: ["res/1.jpg",
@@ -52,7 +34,7 @@ Resource.load({
         "res/eight.png",
         "res/nine.png",
         "res/dot.png"//21
-    ], audioes: ["res/photo.mp3"]
+    ]//, audioes: ["res/photo.mp3"]
     //http://fjdx.sc.chinaz.com/Files/DownLoad/sound/huang/cd9/mp3/110.mp3
     //http://www.w3school.com.cn/i/horse.ogg
     //  /android_asset/www/res/photo.ogg
@@ -90,12 +72,11 @@ function initSimulation() {
     simulation = new Simulation({
         ctx: ctx,
         gravity: new b2Vec2(0, 0),
-        allowSleep: false,
+        allowSleep: true,
         step: 1 / 16
     });
-    simulation.setDebugger(document.querySelector("#canvas").getContext("2d"));
-    //simulation.setting.ctx.scale(scaleX,scaleY);
-    simulation.on("shouldcollide", function (fa, fb) {
+    simulation.setDebugger(debugCtx);
+    simulation.on("ShouldCollide", function (fa, fb) {
         var ua = fa.GetUserData();
         var ub = fb.GetUserData();
         if (ua.layer === ub.layer && ua.type === ub.type) return true;
@@ -107,54 +88,63 @@ function toStartPage() {
     initSimulation();
 
     //text
-    var txt = new Thing({
-        type: b2Body.b2_staticBody,
-        position: new b2Vec2(hw, hh)
+//    var txt = new Thing({
+//        type: b2Body.b2_staticBody,
+//        position: new b2Vec2(hw, hh)
+//    });
+//    shape = new b2PolygonShape();
+//    shape.SetAsBox(res.images[1].width / 2, res.images[1].height / 2);
+//    txt.addFixtureDef({
+//        shape: shape
+//    });
+//    simulation.createThing(txt);
+//
+//    var alphaStep = 1 / 30;
+//    var alpha = 0;
+//    var direction = 1;
+//    //rendering
+//    simulation.on("rendering", function (ctx) {
+//
+//        //draw start image
+//        //ctx.save();
+//        //ctx.scale(scaleX,scaleY);
+//        ctx.drawImage(res.images[0], 0, 0);
+//        //ctx.restore();
+//
+//        ctx.save();
+////        ctx.scale(scaleX, scaleY);
+//        ctx.globalAlpha = alpha;
+//        ctx.drawImage(res.images[1], 180, 600);
+//        ctx.restore();
+//        if (alpha <= 0) direction = 1;
+//        if (alpha >= 1) direction = 0
+//        if (direction === 1) {
+//            alpha += alphaStep;
+//            alpha = alpha > 1 ? 1 : alpha;
+//        }
+//        else {
+//            alpha -= alphaStep;
+//            alpha = alpha < 0 ? 0 : alpha;
+//        }
+//
+//    });
+
+    simulation.setBackground(function(){
+        //draw background
+        this.drawImage(res.images[0],0,0);
     });
-    shape = new b2PolygonShape();
-    shape.SetAsBox(res.images[1].width / 2, res.images[1].height / 2);
-    txt.addFixtureDef({
-        shape: shape
-    });
-    simulation.createThing(txt);
 
-    var alphaStep = 1 / 30;
-    var alpha = 0;
-    var direction = 1;
-    //rendering
-    simulation.on("rendering", function (ctx) {
-
-        //draw start image
-        //ctx.save();
-        //ctx.scale(scaleX,scaleY);
-        ctx.drawImage(res.images[0], 0, 0);
-        //ctx.restore();
-
-        ctx.save();
-//        ctx.scale(scaleX, scaleY);
-        ctx.globalAlpha = alpha;
-        ctx.drawImage(res.images[1], 180, 600);
-        ctx.restore();
-        if (alpha <= 0) direction = 1;
-        if (alpha >= 1) direction = 0
-        if (direction === 1) {
-            alpha += alphaStep;
-            alpha = alpha > 1 ? 1 : alpha;
-        }
-        else {
-            alpha -= alphaStep;
-            alpha = alpha < 0 ? 0 : alpha;
-        }
-
-    });
+    var flickEffect=new FlickerEffect(ctx,(1/1)*simulation.setting.step);
+    simulation.addRender(function(){
+        this.drawImage(res.images[1], canvas.width/2-res.images[1].width/2, 600*Resource.scale.y);
+    },[flickEffect]);
 
     //run
-    simulation.run();
+    simulation.start();
 
     function tap() {
         canvas.removeEventListener("click", tap);
-        simulation.pause();
-
+        simulation.stop();
         toGamePage();
     }
 
