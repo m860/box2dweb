@@ -14,26 +14,19 @@
         }
     </style>
     <script type="text/javascript" src="Box2dWeb-2.1.a.3.min.js"></script>
-    <script type="text/javascript" src="../Simulation.js"></script>
+    <script type="text/javascript" src="res/Simulation.min.js"></script>
+    <script type="text/javascript" src="res/audio.min.js"></script>
 </head>
 <body>
 <canvas id="canvas" width="480" height="800"></canvas>
 <script type="text/javascript">
-
-//    var clickTime;
-//    var stopTime;
-//    var navTime;
-
     var canvas = document.querySelector("#canvas")
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     var ctx = canvas.getContext("2d");
-
     var simulation;
     var res;
     var shape;
-
-    //load resource
     Resource.load({
         images: ["res/1.jpg",
             "res/2.png",
@@ -66,19 +59,33 @@
         toReadyPage();
     }, true, {width: canvas.width, height: canvas.height}, {width: 480, height: 800}, function (index, length) {
     });
-
+    function appendAudio(){
+        var audio=document.createElement("audio");
+        audio.preload="auto";
+        var source=document.createElement("source");
+        source.src="res/photo.mp3";
+        audio.appendChild(source);
+        document.body.appendChild(audio);
+    }
+    appendAudio();
     var music=null;
-    Resource.load({audioes:["res/photo.mp3"]},function(result){
-        music=result.audioes[0];
+    audiojs.events.ready(function () {
+        music = audiojs.createAll()[0];
+        console.log(music!=null);
+        document.querySelector(".audiojs").style.display = "none";
     });
+    function activateMusic(){
+        if(music){
+            music.pause();
+            document.removeEventListener('touchstart',activateMusic, false);
+        }
+    }
+    document.addEventListener('touchstart',activateMusic, false);
     function playMusic(){
         if(music){
-
-            music.load();
             music.play();
         }
     }
-
     function drawScore(ctx, score) {
         var left, top = 311 * Resource.scale.y;
         var scoreStr = new String(score);
@@ -96,51 +103,33 @@
             left += res.images[11].width;
         }
     }
-
     function toReadyPage() {
         simulation = new Simulation({
             ctx: ctx
         });
-
-        //canvas click
         function canvasClick() {
             canvas.removeEventListener("click", canvasClick);
-
             simulation.stop();
-
-            //to description page
             toDescriptionPage();
         }
-
         canvas.addEventListener("click", canvasClick);
-
-        //set background
         simulation.setBackground(function () {
             this.drawImage(res.images[0], 0, 0);
         });
-
-        //flick
         simulation.addRender(function () {
             this.drawImage(res.images[1], 180 * Resource.scale.x, 600 * Resource.scale.y);
         }, [new FlickerEffect(ctx, simulation.setting.step)]);
-
-        //run
         simulation.start();
     }
-
     function toDescriptionPage() {
-        //to game page
         toGamePage();
     }
-
     function toGamePage() {
         simulation = new Simulation({
             ctx: ctx,
             gravity: new b2Vec2(0, Number.random(40, 50)),
-            step:1/60
+            step:1/30
         });
-
-        //button body
         var button = new Thing({
             type: b2Body.b2_staticBody,
             position: new b2Vec2(canvas.width / 2, (canvas.height - res.images[10].height) + res.images[10].height / 2),
@@ -155,8 +144,6 @@
             restitution: 0
         });
         simulation.createThing(button);
-
-        //photo body
         var photo = new Thing({
             type: b2Body.b2_dynamicBody,
             position: new b2Vec2(canvas.width / 2, 0),
@@ -173,23 +160,13 @@
             restitution: 0
         });
         simulation.createThing(photo);
-
-        //frame position
         var framePos = new b2Vec2((canvas.width - res.images[3].width) / 2, (canvas.height - res.images[10].height - res.images[3].height) / 2);
-
-        //button position
         var buttonPos = new b2Vec2(0, canvas.height - res.images[10].height);
-
         var isEnd = false;
-
         function end() {
-//            navTime=Date.now();
-//            alert(String.format("click:{0},stop:{1},nav:{2},dur:{3}",clickTime,stopTime,navTime,navTime-clickTime));
             simulation.stop();
             canvas.removeEventListener("mousedown", mouseDown);
-
             function calculateScore() {
-                //calculate score
                 var score = 0;
                 var p1 = photo.body.GetPosition().Copy();
                 p1.Multiply(Simulation.SCALE);
@@ -209,57 +186,35 @@
                 if (score == 100) return score;
                 return score.toFixed(2);
             }
-
             isEnd = true;
             setTimeout(function () {
 				toStopPage(calculateScore());
             }, 1000);
-
         }
-
         var estep = (canvas.height / 0.2) * simulation.setting.step;
         var eheight = 0;
         var direction = 1;
-
-
         function drawPhotoEffect(ctx) {
             if (eheight <= 0 && direction === 0 && !isEnd) {
                 end();
             }
-//            if(!stopTime) stopTime=Date.now();
-            //if (!isEnd) end();
-
-//        ctx.save();
-//        ctx.globalAlpha=0.5;
-            //draw top
             ctx.fillRect(0, 0, canvas.width, eheight);
-
-            //draw bottom
             ctx.fillRect(0, canvas.height - eheight, canvas.width, eheight);
-
-//        ctx.restore();
-
             if (direction === 1) {
                 eheight += estep;
             }
             else {
                 eheight -= estep
             }
-
             if (eheight >= canvas.height / 2) {
                 direction = 0;
             }
-
-
         }
-
         simulation.setBackground(function () {
             this.drawImage(res.images[9], 0, 0);
             this.drawImage(res.images[10], buttonPos.x, buttonPos.y);
         });
-
         simulation.addRender(function () {
-            //draw photo
             var photoPos;
             photoPos = photo.body.GetPosition().Copy();
             photoPos.Multiply(Simulation.SCALE);
@@ -268,23 +223,12 @@
             ctx.rotate(photo.body.GetAngle());
             ctx.translate(-photoPos.x, -photoPos.y);
             ctx.drawImage(res.images[2], photoPos.x - res.images[2].width / 2, photoPos.y - res.images[2].height / 2);
-
-            //ctx.beginPath();
-            //ctx.arc(photoPos.x,photoPos.y,10,0,Math.PI*2);
-            //ctx.closePath();
-            //ctx.fill();
-
             ctx.restore();
-
-
-            //draw mask
             ctx.save();
             ctx.globalAlpha = 0.5;
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height - res.images[10].height);
             ctx.restore();
-
-            //draw mask photo
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(framePos.x, framePos.y);
@@ -297,82 +241,49 @@
             ctx.rotate(photo.body.GetAngle());
             ctx.translate(-photoPos.x, -photoPos.y);
             ctx.drawImage(res.images[2], photoPos.x - res.images[2].width / 2, photoPos.y - res.images[2].height / 2);
-
-            //ctx.beginPath();
-            //ctx.arc(photoPos.x,photoPos.y,10,0,Math.PI*2);
-            //ctx.closePath();
-            //ctx.fill();
-
             ctx.restore();
-
-            //draw frame
             ctx.drawImage(res.images[3], framePos.x, framePos.y);
-            //ctx.beginPath();
-            //ctx.arc(framePos.x,framePos.y,10,0,Math.PI*2);
-            //ctx.closePath();
-            //ctx.fill();
-
             if (photo.body.GetType() === b2Body.b2_staticBody) {
                 drawPhotoEffect(ctx);
             }
         });
-
-        //
         simulation.on("BeginContact", function (contact) {
             var ba = contact.GetFixtureA().GetBody();
             var bb = contact.GetFixtureB().GetBody();
             var ua = ba.GetUserData();
             var ub = bb.GetUserData();
             if (ua && ua.id == "body_photo") {
-                //ua.destroy = true;
                 playMusic();
                 ba.SetType(b2Body.b2_staticBody);
             }
             else if (ub && ub.id == "body_photo") {
-                //ub.destroy = true;
                 playMusic();
                 bb.SetType(b2Body.b2_staticBody);
             }
         });
 
         function mouseDown(evt) {
-//            clickTime=Date.now();
-//            photo.body.SetType(b2Body.b2_staticBody);
-//            playMusic();
             mouseX = evt.clientX;
             mouseY = evt.clientY;
-
-            //find body
             var mouseBody = simulation.getBodyAtMouse(mouseX, mouseY);
             if (mouseBody) {
                 var userData = mouseBody.GetUserData();
                 if (userData) {
                     var id = userData.id;
                     if (id === "button_photo") {
-//                        clickTime=Date.now();
                         photo.body.SetType(b2Body.b2_staticBody);
                         playMusic();
-//                    end();
                     }
                 }
             }
         }
-
         canvas.addEventListener("mousedown", mouseDown);
-
-        //run
         simulation.start();
     }
-
     function toStopPage(score) {
         simulation = new Simulation({
             ctx: ctx
         });
-
-        //set debug
-//    simulation.setDebugger(debugCtx);
-
-        //share button
         var shareButton = new Thing({
             type: b2Body.b2_staticBody,
             position: new b2Vec2(canvas.width / 2,
@@ -390,10 +301,7 @@
         shareButton.addFixtureDef({
             shape: shape
         });
-
         simulation.createThing(shareButton);
-
-        //again button
         var againButton = new Thing({
             type: b2Body.b2_staticBody,
             position: new b2Vec2(canvas.width / 2, (608 + res.images[6].height / 2) * Resource.scale.y)
@@ -405,8 +313,6 @@
             shape: shape
         });
         simulation.createThing(againButton);
-
-        //buy button
         var buyButton = new Thing({
             type: b2Body.b2_staticBody,
             position: new b2Vec2(canvas.width / 2, (440 + res.images[7].height / 2) * Resource.scale.y)
@@ -417,18 +323,11 @@
         buyButton.addFixtureDef({
             shape: shape
         });
-
         simulation.createThing(buyButton);
-
         simulation.setBackground(function () {
-            //draw background
             this.drawImage(res.images[22], 0, 0);
-            //draw title
             drawScore(this, score);
-
             var pos;
-
-            //draw buy button
             pos = buyButton.body.GetPosition().Copy();
             pos.Multiply(Simulation.SCALE);
             if (score < 100) {
@@ -437,17 +336,14 @@
             else{
                 this.drawImage(res.images[23], pos.x - (res.images[23].width / 2), pos.y - (res.images[23].height / 2));
             }
-//        draw share button
             pos = shareButton.body.GetPosition().Copy();
             pos.Multiply(Simulation.SCALE);
             if (score >= 100) {
                 this.drawImage(res.images[5], pos.x - (res.images[5].width / 2), pos.y - (res.images[5].height / 2));
-
             }
             else {
                 this.drawImage(res.images[8], pos.x - (res.images[8].width / 2), pos.y - (res.images[8].height / 2));
             }
-            //draw again button
             pos = againButton.body.GetPosition().Copy();
             pos.Multiply(Simulation.SCALE);
             this.drawImage(res.images[6], pos.x - (res.images[6].width / 2), pos.y - (res.images[6].height / 2));
@@ -456,8 +352,6 @@
         function mouseDown(evt) {
             mouseX = evt.clientX;
             mouseY = evt.clientY;
-
-            //find body
             var mouseBody = simulation.getBodyAtMouse(mouseX, mouseY);
             if (mouseBody) {
                 var userData = mouseBody.GetUserData();
@@ -482,10 +376,7 @@
                 }
             }
         }
-
         canvas.addEventListener("mousedown", mouseDown);
-
-        //run
         simulation.start();
     }
 </script>

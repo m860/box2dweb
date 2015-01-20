@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        button {
+            width: 100%;
+            height: 100px;
+        }
+    </style>
+    <script type="text/javascript" src="lib/audiojs/audio.js"></script>
+</head>
+<body>
+<!--<audio preload="auto">-->
+    <!--<source src="res/audio/photo.mp3"/>-->
+<!--</audio>-->
+<button onclick="play()">Play</button>
+<button onclick="stop()">Stop</button>
+<button onclick="start()">Play each one second on IPod</button>
+<ul>
+    <li>@部署到iis时,不需要load就可以重复播放</li>
+    <li>@如果是以html的方式直接打开,需要先load,然后在播放</li>
+    <li>@audio crate之后隐藏</li>
+    <li>@每秒自动播放,pass in chrome,safari.在IPOD 微信和chrome app中需要手动触发一次,之后就可以自动播放了.</li>
+    <li>@动态生成没得问题</li>
+</ul>
+<script type="text/javascript">
+    function appendAudio(){
+        var audio=document.createElement("audio");
+        audio.preload="auto";
+        var source=document.createElement("source");
+        source.src="res/audio/photo.mp3";
+        audio.appendChild(source);
+        document.body.appendChild(audio);
+    }
+    //
+    appendAudio();
+
+
+    var audioes;
+    audiojs.events.ready(function () {
+        audioes = audiojs.createAll();
+
+        //hide
+        var eleAudio = document.querySelector(".audiojs");
+        eleAudio.style.display = "none";
+    });
+
+    function play() {
+        //部署到iis时,不需要load就可以重复播放
+        //pass in chrome,safari,qq app,chrome app,weixin,ipod
+        //audioes[0].load(audioes[0].mp3);
+        audioes[0].play();
+    }
+
+    var isStop=false;
+    function stop(){
+        isStop=true;
+    }
+
+    function start(){
+        audioes[0].setVolume(0);
+        audioes[0].play();
+    }
+
+    function eachOneSecond() {
+        if(isStop) return;
+        if (audioes && audioes[0]) {
+            audioes[0].setVolume(1);
+            audioes[0].play();
+        }
+        setTimeout(eachOneSecond, 1000);
+    }
+    eachOneSecond();
+
+    function touch(){
+        start();
+        alert("I am touch");
+    }
+    document.addEventListener('touchstart',touch, false);
+</script>
+</body>
+</html>
