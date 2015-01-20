@@ -17,10 +17,16 @@
     <!--<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>-->
     <script type="text/javascript" src="Box2dWeb-2.1.a.3.min.js"></script>
     <script type="text/javascript" src="../Simulation.js"></script>
+    <script type="text/javascript" src="res/audio.min.js"></script>
 </head>
 <body>
 <canvas id="canvas" width="480" height="800"></canvas>
+<audio src="res/photo.mp3"/>
 <script type="text/javascript">
+    audiojs.events.ready(function() {
+        var as = audiojs.createAll();
+        console.log("audio is ready");
+    });
     var canvas = document.querySelector("#canvas")
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
