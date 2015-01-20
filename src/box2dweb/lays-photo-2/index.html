@@ -13,20 +13,17 @@
             overflow: hidden;
         }
     </style>
-
-    <!--<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>-->
     <script type="text/javascript" src="Box2dWeb-2.1.a.3.min.js"></script>
     <script type="text/javascript" src="../Simulation.js"></script>
-    <script type="text/javascript" src="res/audio.min.js"></script>
 </head>
 <body>
 <canvas id="canvas" width="480" height="800"></canvas>
-<audio src="res/photo.mp3"/>
 <script type="text/javascript">
-    audiojs.events.ready(function() {
-        var as = audiojs.createAll();
-        console.log("audio is ready");
-    });
+
+//    var clickTime;
+//    var stopTime;
+//    var navTime;
+
     var canvas = document.querySelector("#canvas")
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -70,6 +67,17 @@
     }, true, {width: canvas.width, height: canvas.height}, {width: 480, height: 800}, function (index, length) {
     });
 
+    var music=null;
+    Resource.load({audioes:["res/photo.mp3"]},function(result){
+        music=result.audioes[0];
+    });
+    function playMusic(){
+        if(music){
+
+            music.load();
+            music.play();
+        }
+    }
 
     function drawScore(ctx, score) {
         var left, top = 311 * Resource.scale.y;
@@ -128,7 +136,8 @@
     function toGamePage() {
         simulation = new Simulation({
             ctx: ctx,
-            gravity: new b2Vec2(0, Number.random(40, 50))
+            gravity: new b2Vec2(0, Number.random(40, 50)),
+            step:1/60
         });
 
         //button body
@@ -174,7 +183,9 @@
         var isEnd = false;
 
         function end() {
-            simulation.pause();
+//            navTime=Date.now();
+//            alert(String.format("click:{0},stop:{1},nav:{2},dur:{3}",clickTime,stopTime,navTime,navTime-clickTime));
+            simulation.stop();
             canvas.removeEventListener("mousedown", mouseDown);
 
             function calculateScore() {
@@ -215,6 +226,7 @@
             if (eheight <= 0 && direction === 0 && !isEnd) {
                 end();
             }
+//            if(!stopTime) stopTime=Date.now();
             //if (!isEnd) end();
 
 //        ctx.save();
@@ -313,15 +325,20 @@
             var ub = bb.GetUserData();
             if (ua && ua.id == "body_photo") {
                 //ua.destroy = true;
+                playMusic();
                 ba.SetType(b2Body.b2_staticBody);
             }
             else if (ub && ub.id == "body_photo") {
                 //ub.destroy = true;
+                playMusic();
                 bb.SetType(b2Body.b2_staticBody);
             }
         });
 
         function mouseDown(evt) {
+//            clickTime=Date.now();
+//            photo.body.SetType(b2Body.b2_staticBody);
+//            playMusic();
             mouseX = evt.clientX;
             mouseY = evt.clientY;
 
@@ -332,7 +349,9 @@
                 if (userData) {
                     var id = userData.id;
                     if (id === "button_photo") {
+//                        clickTime=Date.now();
                         photo.body.SetType(b2Body.b2_staticBody);
+                        playMusic();
 //                    end();
                     }
                 }
@@ -446,15 +465,15 @@
                     var id = userData.id;
                     if (id === "again") {
                         canvas.removeEventListener("mousedown", mouseDown);
-                        simulation.pause();
+                        simulation.stop();
                         toGamePage();
                     }
                     else if (id === "share_success") {
-                        simulation.pause();
+                        simulation.stop();
                         alert("share success");
                     }
                     else if (id === "share_fail") {
-                        simulation.pause();
+                        simulation.stop();
                         alert("share fail");
                     }
                     else if (id === "buy") {

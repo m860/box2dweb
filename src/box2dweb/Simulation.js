@@ -90,7 +90,7 @@ window["b2Math"] = Box2D.Common.Math.b2Math;
 //event interface
 function IEvent() {
     this._events = {};
-    this._eachEvts=[];
+    this._eachEvts = [];
 }
 IEvent.prototype = {
     on: function (name, fn) {
@@ -111,22 +111,22 @@ IEvent.prototype = {
         return function () {
         };
     },
-    each:function(ms,fn,params){
-        if(!params) params=[];
+    each: function (ms, fn, params) {
+        if (!params) params = [];
         //var name=String.format("each_{0}",ms);
         this._eachEvts.push({
-            dur:ms,
-            start:0,
-            fn:fn,
-            arg:params
+            dur: ms,
+            start: 0,
+            fn: fn,
+            arg: params
         });
     },
-    triggerEach:function(){
-        Array.each(this._eachEvts,function(){
-            var escape=Date.now()-this.start;
-            if(escape>=this.dur){
-                this.fn.apply(escape,this.arg);
-                this.start=Date.now();
+    triggerEach: function () {
+        Array.each(this._eachEvts, function () {
+            var escape = Date.now() - this.start;
+            if (escape >= this.dur) {
+                this.fn.apply(escape, this.arg);
+                this.start = Date.now();
             }
         });
     }
@@ -152,7 +152,7 @@ IRender.render = function (h, ctx, body) {
         Array.each(this.p, function () {
             this.run();
         });
-        if(body) {
+        if (body) {
             //rotate
             pos = body.GetPosition().Copy();
             angle = body.GetAngle();
@@ -163,8 +163,8 @@ IRender.render = function (h, ctx, body) {
             //draw
             this.f.apply(ctx, [pos, angle]);
         }
-        else{
-            this.f.apply(ctx,[]);
+        else {
+            this.f.apply(ctx, []);
         }
         ctx.restore();
     });
@@ -216,13 +216,21 @@ function Simulation(cfg) {
     //start time
     this.startTime = null;
 
-    this.frame=0;
+    this.frame = 0;
 
     //dctx
     this.dctx = null;
 }
 Simulation.prototype = {
     run: function () {
+        if (this.status === 0) {
+            if (this._timer) {
+                clearTimeout(this._timer);
+                this._timer = null;
+            }
+            this.trigger("stoped", [this.setting.ctx]);
+            return;
+        }
 
         this.frame++;
 
@@ -257,18 +265,7 @@ Simulation.prototype = {
             this.dctx.fillText("Debugger", 0, 10);
         }
 
-
-        //debug
-        //draw clear rect
-        //this.setting.ctx.save();
-        //this.setting.ctx.globalAlpha = 0.3;
-        //this.setting.ctx.strokeStyle = "red";
-        //this.setting.ctx.strokeRect(cx, cy, this.setting.ctx.canvas.width, this.setting.ctx.canvas.height);
-        //this.setting.ctx.restore();
-
         //render event
-        //if (this._events["rendering"]) this._events["rendering"](this.setting.ctx);
-        //this.trigger("rendering", [this.setting.ctx]);
         IRender.render(this.render, this.setting.ctx);
 
         //render body
@@ -277,12 +274,7 @@ Simulation.prototype = {
         while (body) {
             userData = body.GetUserData();
             if (userData) {
-                //userData.render(this.setting.ctx, body);
-                //if(userData._events["update"]) userData._events["update"](this.setting.ctx, body);
                 userData.update(this.setting.ctx, body);
-                //userData.trigger("update",[this.setting.ctx, body]);
-                //userData.trigger("apply",[this.setting.ctx, body]);
-                //userData.trigger("render",[this.setting.ctx, body]);
             }
             body = body.GetNext();
         }
@@ -293,26 +285,11 @@ Simulation.prototype = {
 
         //loop
         //this._timer = window.requestAnimationFrame(this.run.bind(this));
-        if (this.status === 0 || this.status == 2) {
-            if (this._timer) {
-                clearTimeout(this._timer);
-                this._timer = null;
-            }
-            //stop , pause event
-            //if (this._events["stoped"]) this._events["stoped"](this.setting.ctx);
-            this.trigger("stoped", [this.setting.ctx]);
-            return;
-        }
-        else {
-            this._timer = setTimeout(this.run.bind(this), 1000 * this.setting.step);
-        }
+        this._timer = setTimeout(this.run.bind(this), 1000 * this.setting.step);
     },
     start: function () {
         this.status = 1;
         this.run();
-    },
-    pause: function () {
-        this.status = 2;
     },
     stop: function () {
         this.status = 0;
@@ -328,10 +305,6 @@ Simulation.prototype = {
         delete thing.bodyDef;
         delete thing.fixtureDef;
     },
-    //on: function (name, fn) {
-    //    this._events[name] = fn;
-    //    return this;
-    //},
     setCamera: function (camera) {
         //
         camera.ctx = this.setting.ctx;
@@ -375,15 +348,15 @@ Simulation.prototype = {
         debugDraw.SetDrawScale(Simulation.SCALE);
         this.world.SetDebugDraw(debugDraw);
     },
-    setBackground:function(fn){
-        var c=this.setting.ctx.canvas;
-        c.style.background="-webkit-canvas(canvas-background)";
-        var cssCtx=document.getCSSCanvasContext("2d","canvas-background", c.width, c.height);
-        if(fn) fn.apply(cssCtx);
+    setBackground: function (fn) {
+        var c = this.setting.ctx.canvas;
+        c.style.background = "-webkit-canvas(canvas-background)";
+        var cssCtx = document.getCSSCanvasContext("2d", "canvas-background", c.width, c.height);
+        if (fn) fn.apply(cssCtx);
     },
-    getFPS:function(){
-        var dur=this.getRunDuration()/1000;
-        return this.frame/dur;
+    getFPS: function () {
+        var dur = this.getRunDuration() / 1000;
+        return this.frame / dur;
     }
 };
 //apply IEvent.prototype
@@ -490,8 +463,8 @@ Thing.prototype = {
     on: function (name, fn) {
         this.bodyDef.userData.on(name, fn);
     },
-    each:function(ms,fn,params){
-        this.bodyDef.userData.each(ms,fn,params);
+    each: function (ms, fn, params) {
+        this.bodyDef.userData.each(ms, fn, params);
     },
     addRender: function (fn, effects) {
         effects = effects ? effects : [];
