@@ -3,25 +3,43 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
-    <script type="text/javascript" src="Box2dWeb-2.1.a.3.js"></script>
-    <script type="text/javascript" src="Simulation.js"></script>
+    <style type="text/css">
+        button{width: 100%;height: 50px;}
+    </style>
+    <script type="text/javascript" src="lib/Box2dWeb-2.1.a.3.js"></script>
+    <script type="text/javascript" src="lib/Simulation/Simulation.js"></script>
+    <script type="text/javascript" src="lib/audiojs/audio.js"></script>
 </head>
 <body>
-<canvas id="canvas" width="400" height="300"></canvas>
+<button>Activate Audio on Android and IOS</button>
+<button onclick="play()">Play</button>
+<canvas id="canvas" width="400" height="50"></canvas>
 <script type="application/javascript">
     var canvas = document.querySelector("#canvas");
     var ctx = canvas.getContext("2d");
-    Resource.load({
-        images: ["http://photocdn.sohu.com/20140516/Img399641351.jpg"],
-        audioes: ["http://www.w3school.com.cn/i/horse.ogg"]
-    }, function (res) {
-        console.info(res);
-    }, false, null, null, function (index,count) {
-        console.log(index);
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillText(index/count,0,10);
-        ctx.fillRect(0,30,canvas.width*(index/count),10);
+    Resource.loadImage(["http://photocdn.sohu.com/20140516/Img399641351.jpg"],
+            function (res) {
+                console.log("image load complete");
+                console.info(res);
+            }, false, null, null, function (index, count) {
+                console.log(String.format("current item index : {0}",index));
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillText(String.format("load percent : {0}%",(index / count)*100), 0, 10);
+                ctx.fillRect(0, 30, canvas.width * (index / count), 10);
+            });
+
+    var music;
+    Resource.loadAudio(["res/audio/photo.mp3"], function (ad) {
+        console.log("audio load complete");
+        console.log(ad);
+        music=ad[0];
     });
+
+    function play(){
+        if(music){
+            music.play();
+        }
+    }
 </script>
 </body>
 </html>
