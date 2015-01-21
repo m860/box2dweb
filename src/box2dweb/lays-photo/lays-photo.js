@@ -134,7 +134,7 @@ function toStartPage() {
         this.drawImage(res.images[0],0,0);
     });
 
-    var flickEffect=new FlickerEffect(ctx,(1/1)*simulation.setting.step);
+    var flickEffect=new FadeEffect(ctx,(1/1)*simulation.setting.step);
     simulation.addRender(function(){
         this.drawImage(res.images[1], canvas.width/2-res.images[1].width/2, 600*Resource.scale.y);
     },[flickEffect]);

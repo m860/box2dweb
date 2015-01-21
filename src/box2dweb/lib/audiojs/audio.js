@@ -33,7 +33,7 @@
         // Where all the default settings are stored. Each of these variables and methods can be overwritten by the user-provided `options` object.
         settings: {
             autoplay: false,
-            loop: false,
+            reverse: false,
             preload: true,
             imageLocation: path + 'player-graphics.gif',
             swfLocation: path + 'audiojs.swf',
@@ -223,7 +223,7 @@
 
             // Check for `autoplay`, `loop` and `preload` attributes and write them into the settings.
             if (element.getAttribute('autoplay') != null) s.autoplay = true;
-            if (element.getAttribute('loop') != null) s.loop = true;
+            if (element.getAttribute('loop') != null) s.reverse = true;
             if (element.getAttribute('preload') == 'none') s.preload = false;
             // Merge the default settings with the user-defined `options`.
             if (options) this.helpers.merge(s, options);
@@ -673,7 +673,7 @@
         },
         trackEnded: function(e) {
             this.skipTo.apply(this, [0]);
-            if (!this.settings.loop) this.pause.apply(this);
+            if (!this.settings.reverse) this.pause.apply(this);
             this.settings.trackEnded.apply(this);
         }
     }
