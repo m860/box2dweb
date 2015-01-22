@@ -5,11 +5,12 @@ module.exports = function(grunt) {
   grunt.initConfig({
     // Metadata.
     pkg: grunt.file.readJSON('package.json'),
-    banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
+	version:"0.1.0",
+    banner: '/*! simulation - v<%=version %> - ' +
       '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
-      '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
-      '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-      ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */\n',
+      '' +
+      '* Copyright (c) <%= grunt.template.today("yyyy") %> J.MA;' +
+      ' Licensed MIT */\n',
     // Task configuration.
     concat: {
       options: {
@@ -17,8 +18,8 @@ module.exports = function(grunt) {
         stripBanners: true
       },
       dist: {
-        src: ['lib/<%= pkg.name %>.js'],
-        dest: 'dist/<%= pkg.name %>.js'
+        src: ['lib/Box2dWeb-2.1.a.3.js','lib/Simulation/Simulation.js','lib/Simulation/effect/Effect.js','lib/Simulation/effect/FadeEffect.js','lib/Simulation/effect/ZoomEffect.js','lib/audiojs/audio.js'],
+        dest: 'dist/simulation.js'
       }
     },
     uglify: {
@@ -27,7 +28,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: 'dist/<%= pkg.name %>.min.js'
+        dest: 'dist/simulation.min.js'
       }
     },
     jshint: {
@@ -77,5 +78,9 @@ module.exports = function(grunt) {
 
   // Default task.
   grunt.registerTask('default', ['jshint', 'qunit', 'concat', 'uglify']);
+  
+  grunt.registerTask('d', ['concat']);
+  
+  grunt.registerTask('r', ['uglify']);
 
 };
