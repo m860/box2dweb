@@ -54,6 +54,14 @@ module.exports = function(grunt) {
         src: ['lib/**/*.js', 'test/**/*.js']
       }
     },
+      copy:{
+          main:{
+              files:[
+                   //lays-photo-2
+                  //{expand:false,src:["dist/*"],dest:"lays-photo-2/res/",filter:"isFile"}
+              ]
+          }
+      },
     watch: {
       gruntfile: {
         files: '<%= jshint.gruntfile.src %>',
@@ -71,7 +79,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-copy');
 
   // Default task.
   grunt.registerTask('default', ['jshint',  'concat', 'uglify']);
