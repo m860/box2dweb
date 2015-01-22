@@ -556,9 +556,9 @@ Resource.loadImage = function (res, complete, adjust, canvasSize, targetSize, pr
 
         Resource.scale = {x: sx, y: sy};
 
-        var i = 0, len = result.images.length, img;
+        var i = 0, len = result.length, img;
         for (; i < len; i++) {
-            img = result.images[i];
+            img = result[i];
             canvas = document.createElement("canvas");
             canvas.width = img.width * sx;
             canvas.height = img.height * sy;
@@ -569,7 +569,7 @@ Resource.loadImage = function (res, complete, adjust, canvasSize, targetSize, pr
             ctx.drawImage(img, 0, 0);
             ctx.restore();
 
-            result.images[i] = canvas;
+            result[i] = canvas;
         }
     }
 
