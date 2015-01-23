@@ -24,8 +24,8 @@
 
         //set background
         simulation.setBackground(function(){
-            this.drawImage(res.images[0],0,0);
-            this.drawImage(res.images[1],0,0);
+            this.drawImage(res[0],0,0);
+            this.drawImage(res[1],0,0);
         });
 
         //set debug
@@ -35,9 +35,7 @@
         simulation.start();
     }
 
-    Resource.load({
-        images:["lays-photo-2/res/10.jpg","lays-photo-2/res/11.jpg"]
-    },resourceReady);
+    Resource.loadImage(["lays-photo-2/res/10.jpg","lays-photo-2/res/11.jpg"],resourceReady);
 
 </script>
 </body>

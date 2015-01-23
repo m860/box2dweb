@@ -18,7 +18,12 @@ module.exports = function(grunt) {
         stripBanners: true
       },
       dist: {
-        src: ['lib/Box2dWeb-2.1.a.3.js','lib/Simulation/Simulation.js','lib/Simulation/effect/Effect.js','lib/Simulation/effect/FadeEffect.js','lib/Simulation/effect/ZoomEffect.js','lib/audiojs/audio.js'],
+        src: ['lib/Box2dWeb-2.1.a.3.js',
+            'lib/Simulation/Simulation.js',
+//            'lib/Simulation/effect/Effect.js',
+//            'lib/Simulation/effect/FadeEffect.js',
+//            'lib/Simulation/effect/ZoomEffect.js',
+            'lib/audiojs/audio.js'],
         dest: 'dist/simulation.js'
       }
     },

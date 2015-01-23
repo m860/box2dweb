@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style type="text/css">
+        button {
+            width: 100%;
+            height: 100px;
+        }
+    </style>
+    <script type="text/javascript" src="lib/Box2dWeb-2.1.a.3.js"></script>
+    <script type="text/javascript" src="lib/Simulation/Simulation.js"></script>
+    <script type="text/javascript" src="lib/audiojs/audio.js"></script>
+</head>
+<body>
+<button onclick="play()">Play</button>
+<script type="text/javascript">
+    var music;
+    Resource.loadAudio(["res/audio/photo.mp3"],function(result){
+        console.log("audio loaded");
+        music=result[0];
+    });
+    function play(){
+        if(music){
+//            music.pause();
+            music.skipTo(0);
+            music.play();
+        }
+    }
+</script>
+</body>
+</html>

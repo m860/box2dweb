@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="lib/Box2dWeb-2.1.a.3.js"></script>
+    <script type="text/javascript" src="lib/Simulation/Simulation.js"></script>
+</head>
+<body>
+<canvas id="canvas" width="400" height="300"></canvas>
+<canvas id="debug_canvas" width="400" height="300"></canvas>
+<script type="application/javascript">
+    var canvas=document.querySelector("#canvas");
+    var debugCanvas=document.querySelector("#debug_canvas");
+    var ZoomEffect=Effect.ZoomEffect;
+    var FadeEffect=Effect.FadeEffect;
+    var simulation;
+
+    function resourceReady(res){
+//        res=res;
+        simulation=new Simulation({
+            ctx:canvas.getContext("2d"),
+            step:1/60,
+            gravity:new b2Vec2(0,0)
+        });
+
+        //fps
+        simulation.addRender(function(){
+            this.fillText(String.format("FPS:{0}",simulation.getFPS()),0,10);
+        });
+
+        var center=new b2Vec2(canvas.width/2,canvas.height/2);
+        var img=res[0];
+        var dur=2;
+
+        var zoom=new ZoomEffect(simulation.setting.ctx,center,1,2,(1/dur)*simulation.setting.step);
+        var fade=new FadeEffect(simulation.setting.ctx,1,0,(1/dur)*simulation.setting.step);
+        fade.on("stop",function(item){
+            console.log("fade stop");
+//            this.destroy=true;
+            item.destroy=true;
+        });
+        simulation.addRender(function(){
+            this.drawImage(img,center.x-img.width/2,center.y-img.height/2);
+        },[zoom,fade]);
+
+        //run
+        simulation.start();
+    }
+
+    Resource.loadImage(["lays-photo-2/res/one.png"],resourceReady);
+
+</script>
+</body>
+</html>

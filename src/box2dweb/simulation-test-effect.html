@@ -5,9 +5,6 @@
     <title></title>
     <script type="text/javascript" src="lib/Box2dWeb-2.1.a.3.js"></script>
     <script type="text/javascript" src="lib/Simulation/Simulation.js"></script>
-    <script type="text/javascript" src="lib/Simulation/effect/Effect.js"></script>
-    <script type="text/javascript" src="lib/Simulation/effect/FadeEffect.js"></script>
-    <script type="text/javascript" src="lib/Simulation/effect/ZoomEffect.js"></script>
 </head>
 <body>
 <canvas id="canvas" width="400" height="300"></canvas>
@@ -15,6 +12,8 @@
 <script type="application/javascript">
     var canvas=document.querySelector("#canvas");
     var debugCanvas=document.querySelector("#debug_canvas");
+    var ZoomEffect=Simulation.Effect.ZoomEffect;
+    var FadeEffect=Simulation.Effect.FadeEffect;
 
     var simulation,res;
 
@@ -34,30 +33,38 @@
         //fade in
         simulation.addRender(function(){
             this.fillText("fade in",0,20);
-        },[new FadeEffect(simulation.setting.ctx,1,0,(1/1)*simulation.setting.step)]);
+        },[new Effect.FadeEffect(simulation.setting.ctx,1,0,(1/1)*simulation.setting.step)]);
         //fade out
         simulation.addRender(function(){
             this.fillText("fade out",0,30);
-        },[new FadeEffect(simulation.setting.ctx,0,1,(1/1)*simulation.setting.step)]);
+        },[new Effect.FadeEffect(simulation.setting.ctx,0,1,(1/1)*simulation.setting.step)]);
         //flicker
         simulation.addRender(function(){
             this.fillText("flicker",0,40);
-        },[new FadeEffect(simulation.setting.ctx,0,1,(1/1)*simulation.setting.step,true)]);
+        },[new Effect.FadeEffect(simulation.setting.ctx,0,1,(1/1)*simulation.setting.step,true)]);
+
+        simulation.addRender(function(){
+            this.fillText("flicker",0,50);
+        },[new Effect.FadeEffect(simulation.setting.ctx,1,0,(1/1)*simulation.setting.step,true)]);
 
         //zoom in
         simulation.addRender(function(){
             this.drawImage(res[0],200,20);
-        },[new ZoomEffect(simulation.setting.ctx,{x:200+res[0].width/2,y:20+res[0].height/2},1,0.5,(0.5/1)*simulation.setting.step,false)]);
+        },[new Effect.ZoomEffect(simulation.setting.ctx,{x:200+res[0].width/2,y:20+res[0].height/2},1,0.5,(0.5/1)*simulation.setting.step,false)]);
 
         //zoom out
         simulation.addRender(function(){
             this.drawImage(res[0],300,20);
-        },[new ZoomEffect(simulation.setting.ctx,{x:300+res[0].width/2,y:20+res[0].height/2},1,1.2,(0.2/1)*simulation.setting.step,false)]);
+        },[new Effect.ZoomEffect(simulation.setting.ctx,{x:300+res[0].width/2,y:20+res[0].height/2},1,1.2,(0.2/1)*simulation.setting.step,false)]);
 
         //zoom out
         simulation.addRender(function(){
             this.drawImage(res[0],200,100);
-        },[new ZoomEffect(simulation.setting.ctx,{x:200+res[0].width/2,y:100+res[0].height/2},1,1.2,(0.2/1)*simulation.setting.step,true)]);
+        },[new Effect.ZoomEffect(simulation.setting.ctx,{x:200+res[0].width/2,y:100+res[0].height/2},1,1.2,(0.2/1)*simulation.setting.step,true)]);
+
+        simulation.addRender(function(){
+            this.drawImage(res[0],300,100);
+        },[new Effect.ZoomEffect(simulation.setting.ctx,{x:300+res[0].width/2,y:100+res[0].height/2},1.2,1,(0.2/1)*simulation.setting.step,true)]);
 
         //run
         simulation.start();

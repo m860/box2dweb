@@ -40,10 +40,10 @@
             position:new b2Vec2(200,0),
             angle:Math.PI/4
         });
-        box.setAsBox(res.images[0]);
+        box.setAsBox(res[0]);
         box.addRender(function(pos,angle){
 //            console.log(String.format("position:{0},{1} angle:{2}",pos.x,pos.y,angle));
-            this.drawImage(res.images[0],pos.x-res.images[0].width/2,pos.y-res.images[0].height/2)
+            this.drawImage(res[0],pos.x-res[0].width/2,pos.y-res[0].height/2)
         });
         simulation.createThing(box);
 
@@ -54,9 +54,7 @@
         simulation.start();
     }
 
-    Resource.load({
-        images:["lays-photo-2/res/one.png"]
-    },resourceReady);
+    Resource.loadImage(["lays-photo-2/res/one.png"],resourceReady);
 
 </script>
 </body>
