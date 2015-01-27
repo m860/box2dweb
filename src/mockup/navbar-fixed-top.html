@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link href="../../bower_components/normalize.css/normalize.css"/>
+    <link href="../../bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet"/>
+    <style type="text/css">
+        .navbar-fixed-top {
+            margin-bottom: 0px !important;
+        }
+        .container .jumbotron{margin-bottom: 0px !important;}
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#"> Fixed Top Navbar</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home</a></li>
+                <li><a href="#">About</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <ul class="nav navbar-nav">
+                    <li><a href="#">Login</a></li>
+                    <li><a href="#">Register</a></li>
+                </ul>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container">
+
+    <!-- Main component for a primary marketing message or call to action -->
+    <div class="jumbotron">
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+        <p>test</p>
+
+
+    </div>
+
+</div>
+<nav class="navbar navbar-default navbar-fixed-bottom">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#"> Fixed Bottom Navbar</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home</a></li>
+                <li><a href="#">About</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <ul class="nav navbar-nav">
+                    <li><a href="#">Login</a></li>
+                    <li><a href="#">Register</a></li>
+                </ul>
+            </ul>
+        </div>
+    </div>
+</nav>
+<script type="text/javascript" src="../../bower_components/jquery/dist/jquery.js"></script>
+<script type="text/javascript" src="../../bower_components/bootstrap/dist/js/bootstrap.js"></script>
+<script type="text/javascript">
+    $(function () {
+        //fixed dom style
+        $(document.body).css({
+            paddingTop: $(".navbar-fixed-top").height(),
+            paddingBottom: $(".navbar-fixed-bottom").height()
+        });
+    });
+</script>
+</body>
+</html>
