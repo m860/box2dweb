@@ -67,7 +67,6 @@
     var music=null;
     audiojs.events.ready(function () {
         music = audiojs.createAll()[0];
-        console.log(music!=null);
         document.querySelector(".audiojs").style.display = "none";
     });
     function activateMusic(){
@@ -114,7 +113,7 @@
         });
         simulation.addRender(function () {
             this.drawImage(res[1], 180 * Resource.scale.x, 600 * Resource.scale.y);
-        }, [new FadeEffect(simulation.setting.ctx,0,1,simulation.setting.step,true)]);
+        }, [new Effect.FadeEffect(simulation.setting.ctx,0,1,simulation.setting.step,true)]);
         simulation.start();
     }
     function toDescriptionPage() {
@@ -283,7 +282,7 @@
         var shareButton = new Thing({
             type: b2Body.b2_staticBody,
             position: new b2Vec2(canvas.width / 2,
-                    score >= 100 ? ((524 + res[5].height / 2) * Resource.scale.y) : ((524 + res[8].height / 2) * Resource.scale.y))
+                    score >= 100 ? ((484 + res[5].height / 2) * Resource.scale.y) : ((484 + res[8].height / 2) * Resource.scale.y))
         });
         shape = new b2PolygonShape();
         if (score >= 100) {
@@ -300,7 +299,7 @@
         simulation.createThing(shareButton);
         var againButton = new Thing({
             type: b2Body.b2_staticBody,
-            position: new b2Vec2(canvas.width / 2, (608 + res[6].height / 2) * Resource.scale.y)
+            position: new b2Vec2(canvas.width / 2, (568 + res[6].height / 2) * Resource.scale.y)
         });
         shape = new b2PolygonShape();
         shape.SetAsBox(res[6].width / 2, res[6].height / 2);
@@ -311,7 +310,7 @@
         simulation.createThing(againButton);
         var buyButton = new Thing({
             type: b2Body.b2_staticBody,
-            position: new b2Vec2(canvas.width / 2, (440 + res[7].height / 2) * Resource.scale.y)
+            position: new b2Vec2(canvas.width / 2, (400 + res[7].height / 2) * Resource.scale.y)
         });
         shape = new b2PolygonShape();
         shape.SetAsBox(res[7].width / 2, res[7].height / 2);
