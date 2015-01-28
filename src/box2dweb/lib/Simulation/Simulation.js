@@ -348,6 +348,14 @@
             return this.frame / dur;
         }
     };
+    Simulation.getDeviceInfo=function(){
+        var agent=navigator.userAgent;
+        var result={};
+        result.isAndroid=(/Android/).test(agent);
+        result.isIphone=(/iPhone/).test(agent);
+        result.isWeixin=(/MicroMessenger/).test(agent);
+        return result;
+    };
     Object.extend(Simulation.prototype, IEvent.prototype);//apply IEvent.prototype
     Object.extend(Simulation.prototype, IRender.prototype);//apply IRender.prototype
 
@@ -766,6 +774,7 @@
     };
 
     window.Effect["ZoomEffect"] = ZoomEffect;
+
 
 
     window["Simulation"] = Simulation;

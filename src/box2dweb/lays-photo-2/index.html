@@ -13,11 +13,16 @@
             overflow: hidden;
         }
     </style>
-    <script type="text/javascript" src="../dist/simulation.js"></script>
+    <script type="text/javascript" src="../lib/Box2dWeb-2.1.a.3.js"></script>
+    <script type="text/javascript" src="../lib/simulation/simulation.js"></script>
+    <script type="text/javascript" src="../lib/audiojs/audio.js"></script>
 </head>
 <body>
 <canvas id="canvas" width="480" height="800"></canvas>
 <script type="text/javascript">
+    var weixinTop=60;
+    var deviceInfo=Simulation.getDeviceInfo();
+//    alert(String.format("android:{0},iphone:{1},weixin:{2}",deviceInfo.isAndroid,deviceInfo.isIphone,deviceInfo.isWeixin));
     var canvas = document.querySelector("#canvas")
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -102,6 +107,7 @@
         simulation = new Simulation({
             ctx: ctx
         });
+
         function canvasClick() {
             canvas.removeEventListener("click", canvasClick);
             simulation.stop();
@@ -122,7 +128,7 @@
     function toGamePage() {
         simulation = new Simulation({
             ctx: ctx,
-            gravity: new b2Vec2(0, Number.random(40, 50)),
+            gravity: new b2Vec2(0, Number.random(30, 40)),
             step:1/30
         });
         var button = new Thing({
@@ -279,10 +285,14 @@
         simulation = new Simulation({
             ctx: ctx
         });
+        var shareButtonTop=484;
+        if(deviceInfo.isWeixin){
+            shareButtonTop+=weixinTop;
+        }
         var shareButton = new Thing({
             type: b2Body.b2_staticBody,
             position: new b2Vec2(canvas.width / 2,
-                    score >= 100 ? ((484 + res[5].height / 2) * Resource.scale.y) : ((484 + res[8].height / 2) * Resource.scale.y))
+                    score >= 100 ? ((shareButtonTop + res[5].height / 2) * Resource.scale.y) : ((shareButtonTop + res[8].height / 2) * Resource.scale.y))
         });
         shape = new b2PolygonShape();
         if (score >= 100) {
@@ -297,9 +307,13 @@
             shape: shape
         });
         simulation.createThing(shareButton);
+        var againButtonTop=568;
+        if(deviceInfo.isWeixin){
+            againButtonTop+=weixinTop;
+        }
         var againButton = new Thing({
             type: b2Body.b2_staticBody,
-            position: new b2Vec2(canvas.width / 2, (568 + res[6].height / 2) * Resource.scale.y)
+            position: new b2Vec2(canvas.width / 2, (againButtonTop + res[6].height / 2) * Resource.scale.y)
         });
         shape = new b2PolygonShape();
         shape.SetAsBox(res[6].width / 2, res[6].height / 2);
@@ -308,9 +322,13 @@
             shape: shape
         });
         simulation.createThing(againButton);
+        var buyButtonTop=400;
+        if(deviceInfo.isWeixin){
+            buyButtonTop+=weixinTop;
+        }
         var buyButton = new Thing({
             type: b2Body.b2_staticBody,
-            position: new b2Vec2(canvas.width / 2, (400 + res[7].height / 2) * Resource.scale.y)
+            position: new b2Vec2(canvas.width / 2, (buyButtonTop + res[7].height / 2) * Resource.scale.y)
         });
         shape = new b2PolygonShape();
         shape.SetAsBox(res[7].width / 2, res[7].height / 2);
