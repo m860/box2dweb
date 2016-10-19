@@ -1,4 +1,0 @@
-html,body,#pages{  height: 100%;}
-#pages{overflow: hidden;position: relative;  width: 100%;}
-#pages>div{position: absolute;  width: 100%;-webkit-transition:top 200ms;
--moz-transition:top 200ms;}

@@ -184,7 +184,7 @@ var gravity = new Box2D.Common.Math.b2Vec2(0, 0);
 var allowSleep = true;
 var world = new Box2D.Dynamics.b2World(gravity, allowSleep);
 
-var plane = new Thing(world);
+var plain = new Thing(world);
 plain.setPosition(150, 270);
 //plain.setAsCircle(10);
 plain.fixtureDef.shape = new Box2D.Collision.Shapes.b2PolygonShape();

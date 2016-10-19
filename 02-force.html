@@ -10,6 +10,7 @@
 <canvas width="400" height="300" id="canvas">
     I'm sorry , your browser don't support the canvas.
 </canvas>
+<p>按住空格键给矩形增加一个向上的力,力的大小由按下的时间决定</p>
 <div id="message">
     <div id="pressDuration"></div>
     <div id="force"></div>
@@ -17,7 +18,7 @@
 <script type="text/javascript">
     var message = document.getElementById("message");
     var pressDuration = document.getElementById("pressDuration");
-    var force = document.getElementById("02-force");
+    var force = document.getElementById("force");
 
     var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d");
